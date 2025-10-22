@@ -3,15 +3,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-# 在所有其他导入之前，先设置日志
-from app.core.logging import setup_logging, log
-
-setup_logging()
-
+from app.core.config import settings
 from app.core.exceptions import setup_exception_handlers
+from app.core.logging import log
 from app.core.middleware import setup_middleware
 from app.db.config import init_db, close_db
-from app.core.config import settings
 from app.routers import api_router
 
 
@@ -75,6 +71,6 @@ def create_app() -> FastAPI:
     setup_exception_handlers(app)
 
     # 注册路由
-    app.include_router(api_router, prefix="/api", tags=["API"])
+    app.include_router(api_router, prefix="/api")
 
     return app

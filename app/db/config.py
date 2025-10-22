@@ -3,6 +3,7 @@ from pathlib import Path
 from tortoise import Tortoise
 
 from app.core.config import settings
+from app.core.logging import log
 
 
 def ensure_database_directory():
@@ -39,7 +40,6 @@ TORTOISE_ORM = {
 
 async def init_db():
     """初始化数据库"""
-
     # 确保数据库目录存在
     ensure_database_directory()
 

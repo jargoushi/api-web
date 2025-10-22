@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     version: str = "1.0.0"
 
     # 日志级别配置 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    log_level: str = "INFO"
+    log_level: str = "DEBUG"
 
 
 # 创建一个全局设置实例
