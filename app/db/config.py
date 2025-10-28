@@ -3,7 +3,6 @@ from pathlib import Path
 from tortoise import Tortoise
 
 from app.core.config import settings
-from app.core.logging import log
 
 
 def ensure_database_directory():

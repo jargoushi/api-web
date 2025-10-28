@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # 添加比特浏览器配置
     BIT_BROWSER_BASE_URL: str = "http://127.0.0.1:54345"  # 默认本地地址
 
+    # 激活码配置
+    ACTIVATION_GRACE_HOURS: int = 1  # 激活码默认宽裕时间（小时）
+
 
 # 创建一个全局设置实例
 settings = Settings()
