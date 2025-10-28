@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from tortoise import fields
 from tortoise.models import Model
 
+from app.core.config import settings
 from app.enums.activation_code_enum import ActivationTypeEnum
 from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
 
@@ -44,36 +45,36 @@ class ActivationCode(Model):
         """获取状态名称"""
         return self.status_enum.desc
 
-    @classmethod
-    def get_expire_time_by_type(cls, code_type: int) -> datetime:
-        """根据类型获取过期时间"""
-        type_enum = ActivationTypeEnum.from_code(code_type)
-        return type_enum.get_expire_time()
+    def calculate_expire_time(self, activated_time: datetime = None) -> datetime:
+        """
+        计算过期时间
 
-    @classmethod
-    def get_type_name(cls, code_type: int) -> str:
-        """获取类型名称"""
-        type_enum = ActivationTypeEnum.from_code(code_type)
-        return type_enum.desc
+        Args:
+            activated_time: 激活时间，如果为None则使用当前实例的activated_at
 
-    @classmethod
-    def get_status_name(cls, status: int) -> str:
-        """获取状态名称"""
-        status_enum = ActivationCodeStatusEnum.from_code(status)
-        return status_enum.desc
+        Returns:
+            计算后的过期时间
+        """
+        if activated_time is None:
+            activated_time = self.activated_at
 
-    # 添加属性方法
-    @property
-    def actual_expire_time(self) -> datetime:
-        """获取实际过期时间（激活时间 + 有效天数 + 1小时宽裕）"""
-        if self.activated_at:
-            type_enum = self.type_enum
-            return self.activated_at + timedelta(days=type_enum.valid_days, hours=1)
-        return None
+        if not activated_time:
+            raise ValueError("激活时间不能为空")
+
+        return self.type_enum.get_expire_time_from(
+            activated_time,
+            settings.ACTIVATION_GRACE_HOURS
+        )
+
+    def activate(self):
+        """激活激活码，设置激活时间和过期时间"""
+        self.activated_at = datetime.now()
+        self.expire_time = self.calculate_expire_time(self.activated_at)
+        self.status = ActivationCodeStatusEnum.USED.code
 
     @property
     def is_expired(self) -> bool:
         """检查是否已过期"""
-        if not self.activated_at:
+        if not self.expire_time:  # 未激活的没有过期时间
             return False
-        return datetime.now() > self.actual_expire_time
+        return datetime.now() > self.expire_time

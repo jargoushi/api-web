@@ -115,10 +115,8 @@ class ActivationCodeService:
 
         # 批量更新状态为已使用，使用枚举值
         for code in codes:
-            code.activated_at = datetime.now()
-            code.expire_time = ActivationTypeEnum.from_code(request.type) \
-                .get_expire_time_from(datetime.now(), Settings.ACTIVATION_GRACE_HOURS)
-            code.status = ActivationCodeStatusEnum.USED.code
+            # 激活码被激活
+            code.activate()
             await code.save()
 
             activation_codes.append(code.activation_code)
