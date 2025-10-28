@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # 日志级别配置 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     log_level: str = "DEBUG"
 
+    # 添加比特浏览器配置
+    BIT_BROWSER_BASE_URL: str = "http://127.0.0.1:54345"  # 默认本地地址
+
 
 # 创建一个全局设置实例
 settings = Settings()

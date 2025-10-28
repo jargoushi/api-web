@@ -13,6 +13,7 @@ def setup_routers():
     # 导入所有子模块路由
     from app.routers import user_router
     from app.routers import index_router
+    from app.routers import bit_browser_router
 
     # 聚合子路由，并统一添加前缀和标签
     api_router.include_router(
@@ -26,6 +27,12 @@ def setup_routers():
         index_router.router,
         prefix="/index",
         tags=["系统"]
+    )
+
+    api_router.include_router(
+        bit_browser_router.router,
+        prefix="/browser",
+        tags=["比特浏览器"]
     )
 
 

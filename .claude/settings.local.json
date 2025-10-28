@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__web-search-prime__webSearchPrime",
+      "mcp__zai-mcp-server__analyze_image",
+      "Bash(mkdir docs)",
+      "WebFetch(domain:doc2.bitbrowser.cn)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
