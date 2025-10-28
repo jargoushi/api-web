@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends
 
 from app.schemas.bit_browser import (
-    BrowserOpenRequest, BrowserOpenResponse,
-    BrowserCloseRequest, BrowserDeleteRequest, BrowserDetailRequest,
+    BrowserOpenRequest, BrowserCloseRequest, BrowserDeleteRequest, BrowserDetailRequest,
     BrowserDetailResponse, BrowserListRequest, WindowArrangeRequest, BrowserListItem, BrowserBatchOpenResponse
 )
 from app.schemas.pagination import PageResponse
 from app.schemas.response import ApiResponse, success_response
-from app.services.bit_browser_service import bit_browser_service
+from app.services.browser_service import bit_browser_service
 
 router = APIRouter()
 
