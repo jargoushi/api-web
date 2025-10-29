@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from app.schemas.activation_code import (
     ActivationCodeGetRequest,
@@ -47,7 +47,7 @@ async def invalidate_activation_code(request: ActivationCodeInvalidateRequest):
     return success_response(data=result)
 
 
-@router.get("/{activation_code}", response_model=ApiResponse[dict], summary="获取激活码详情")
+@router.get("/{activation_code}", response_model=ApiResponse[ActivationCodeResponse], summary="获取激活码详情")
 async def get_activation_code_detail(activation_code: str):
     """
     根据激活码获取详情信息
@@ -57,7 +57,7 @@ async def get_activation_code_detail(activation_code: str):
 
 
 @router.post("/pageList", response_model=ApiResponse[PageResponse[ActivationCodeResponse]], summary="分页获取激活码列表")
-async def get_paginated_activation_codes(params: ActivationCodeQueryRequest = Depends()):
+async def get_paginated_activation_codes(params: ActivationCodeQueryRequest):
     """
     获取激活码列表（分页+条件查询）
     - **page**: 页码，从1开始，默认为1

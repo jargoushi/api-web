@@ -37,7 +37,7 @@ class ActivationCodeService:
         suffix_chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
         suffix = ''.join(secrets.choice(suffix_chars) for _ in range(16))
 
-        return f"{hash2}.{suffix}"
+        return f"{hash2}{suffix}"
 
     @staticmethod
     async def init_activation_codes(request: ActivationCodeBatchCreateRequest) -> ActivationCodeBatchResponse:
@@ -133,12 +133,11 @@ class ActivationCodeService:
         if not code:
             raise BusinessException(message="激活码不存在")
 
-        # 使用枚举比较状态
         if code.status == ActivationCodeStatusEnum.INVALID.code:
             raise BusinessException(message="激活码已作废")
 
-        if code.status == ActivationCodeStatusEnum.USED.code:
-            raise BusinessException(message="激活码已使用，无法作废")
+        if code.status == ActivationCodeStatusEnum.UNUSED.code:
+            raise BusinessException(message="激活码未使用，无法作废")
 
         # 更新状态为作废
         code.status = ActivationCodeStatusEnum.INVALID.code

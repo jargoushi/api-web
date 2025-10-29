@@ -4,8 +4,8 @@ from typing import List, Dict, Optional
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
 from app.enums.activation_code_enum import ActivationTypeEnum
+from app.schemas.base import BaseRequestModel, BaseResponseModel
 from app.schemas.pagination import PageRequest
-from app.schemas.response import BaseResponseModel
 
 
 class ActivationCodeCreateItem(BaseModel):
@@ -15,7 +15,7 @@ class ActivationCodeCreateItem(BaseModel):
     count: int = Field(..., ge=1, le=1000, description="生成数量")
 
 
-class ActivationCodeBatchCreateRequest(BaseModel):
+class ActivationCodeBatchCreateRequest(BaseRequestModel):
     """批量创建激活码的请求模型"""
     items: List[ActivationCodeCreateItem] = Field(..., min_items=1, max_items=10, description="激活码创建项列表")
 
@@ -31,7 +31,7 @@ class ActivationCodeBatchCreateRequest(BaseModel):
         return v
 
 
-class ActivationCodeTypeResult(BaseModel):
+class ActivationCodeTypeResult(BaseRequestModel):
     """单个类型的激活码结果"""
     type: int = Field(..., description="类型码")
     type_name: str = Field(..., description="类型名称")
@@ -39,21 +39,21 @@ class ActivationCodeTypeResult(BaseModel):
     count: int = Field(..., description="数量")
 
 
-class ActivationCodeBatchResponse(BaseModel):
+class ActivationCodeBatchResponse(BaseResponseModel):
     """批量激活码响应模型"""
     results: List[ActivationCodeTypeResult] = Field(..., description="各类型激活码结果")
     total_count: int = Field(..., description="总数量")
     summary: Dict[str, int] = Field(..., description="各类型数量汇总")
 
 
-class ActivationCodeGetRequest(BaseModel):
+class ActivationCodeGetRequest(BaseRequestModel):
     """获取激活码的请求模型"""
     type: int = Field(..., ge=0, le=3,
                       description=f"激活码类型：{', '.join([f'{e.code}：{e.desc}' for e in ActivationTypeEnum])}")
     count: int = Field(1, ge=1, le=100, description="查询条数，默认1条")
 
 
-class ActivationCodeInvalidateRequest(BaseModel):
+class ActivationCodeInvalidateRequest(BaseRequestModel):
     """作废激活码的请求模型"""
     activation_code: str = Field(..., min_length=1, max_length=50, description="激活码")
 
@@ -102,4 +102,3 @@ class ActivationCodeResponse(BaseResponseModel):
     updated_at: datetime = Field(..., description="更新时间")
     activated_at: Optional[datetime] = Field(None, description="激活时间")  # 新增字段
 
-    model_config = ConfigDict(from_attributes=True)

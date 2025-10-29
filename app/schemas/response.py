@@ -1,21 +1,13 @@
 from datetime import datetime
 from typing import Generic, TypeVar, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import Field
 from tortoise.queryset import QuerySet
 
+from app.schemas.base import BaseResponseModel
 from app.schemas.pagination import PageResponse, PageRequest
 
 T = TypeVar('T')
-
-
-class BaseResponseModel(BaseModel):
-    """基础响应模型，统一配置 datetime 序列化格式"""
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
-        }
-    )
 
 
 class ApiResponse(BaseResponseModel, Generic[T]):

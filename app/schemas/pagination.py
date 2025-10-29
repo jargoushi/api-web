@@ -2,18 +2,21 @@ from typing import Generic, TypeVar, List
 
 from pydantic import BaseModel, Field
 
+from app.schemas.base import BaseRequestModel
+
 T = TypeVar('T')
 
 
-class PageRequest(BaseModel):
+class PageRequest(BaseRequestModel):
     """分页请求参数模型"""
     page: int = Field(1, ge=1, description="当前页码，从1开始")
     size: int = Field(10, ge=1, le=100, description="每页数量，最大100")
 
     @property
     def offset(self) -> int:
-        """计算数据库查询的偏移量"""
-        return (self.page - 1) * self.size
+        """计算数据库查询的偏移量，增加上限保护"""
+        offset = (self.page - 1) * self.size
+        return min(offset, 100000)  # 限制最大偏移量为100000，避免过大偏移
 
 
 class PageResponse(BaseModel, Generic[T]):
