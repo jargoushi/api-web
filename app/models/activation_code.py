@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from tortoise import fields
 from tortoise.models import Model
@@ -6,6 +6,7 @@ from tortoise.models import Model
 from app.core.config import settings
 from app.enums.activation_code_enum import ActivationTypeEnum
 from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
+from app.util.time_util import get_utc_now, normalize_datetime, is_expired
 
 
 class ActivationCode(Model):
@@ -69,12 +70,12 @@ class ActivationCode(Model):
 
     def distribute(self):
         """分发激活码，设置分发时间和状态"""
-        self.distributed_at = datetime.now()
+        self.distributed_at = get_utc_now()
         self.status = ActivationCodeStatusEnum.DISTRIBUTED.code
 
     def activate(self):
         """激活激活码，设置激活时间和过期时间"""
-        self.activated_at = datetime.now()
+        self.activated_at = get_utc_now()
         self.expire_time = self.calculate_expire_time(self.activated_at)
         self.status = ActivationCodeStatusEnum.ACTIVATED.code
 
@@ -83,4 +84,7 @@ class ActivationCode(Model):
         """检查是否已过期"""
         if not self.expire_time:  # 未激活的没有过期时间
             return False
-        return datetime.now() > self.expire_time
+
+        # 使用统一的时间工具函数
+        expire_time = normalize_datetime(self.expire_time)
+        return is_expired(expire_time)

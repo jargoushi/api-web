@@ -34,6 +34,20 @@ class Settings(BaseSettings):
     # 激活码配置
     ACTIVATION_GRACE_HOURS: int = 1  # 激活码默认宽裕时间（小时）
 
+    # JWT配置
+    JWT_SECRET_KEY: str  # JWT密钥，生产环境必须设置
+    JWT_ALGORITHM: str = "HS256"  # JWT算法
+    JWT_EXPIRE_MINUTES: int = 1440  # Token有效期（分钟），默认24小时
+
+    # 认证配置
+    ENABLE_AUTH: bool = True  # 是否启用认证中间件
+    TOKEN_REFRESH_THRESHOLD: int = 60  # Token刷新阈值（分钟），剩余时间少于阈值时建议刷新
+
 
 # 创建一个全局设置实例
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """获取设置实例的便捷函数"""
+    return settings
