@@ -96,9 +96,9 @@ class ActivationCodeService:
         )
 
     @staticmethod
-    async def get_activation_codes(request: ActivationCodeGetRequest) -> List[str]:
-        """分发激活码（获取激活码并设置为已分发状态）"""
-        log.info(f"分发激活码，类型：{request.type}，数量：{request.count}")
+    async def distribute_activation_codes(request: ActivationCodeGetRequest) -> List[str]:
+        """派发激活码（获取激活码并设置为已分发状态）"""
+        log.info(f"派发激活码，类型：{request.type}，数量：{request.count}")
 
         # 查询指定类型未使用的激活码，按创建时间倒序
         codes = await ActivationCode.filter(
@@ -121,8 +121,23 @@ class ActivationCodeService:
 
             activation_codes.append(code.activation_code)
 
-        log.info(f"成功分发{len(activation_codes)}个激活码")
+        log.info(f"成功派发{len(activation_codes)}个激活码")
         return activation_codes
+
+    @staticmethod
+    async def get_distributed_activation_code(activation_code: str) -> ActivationCode:
+        """查询已分发的激活码"""
+        log.info(f"查询已分发激活码：{activation_code}")
+
+        code = await ActivationCode.get_or_none(activation_code=activation_code)
+        if not code:
+            raise BusinessException(message="激活码不存在")
+
+        if code.status != ActivationCodeStatusEnum.DISTRIBUTED.code:
+            raise BusinessException(message="激活码状态不正确，必须是已分发状态")
+
+        log.info(f"成功查询已分发激活码：{activation_code}")
+        return code
 
     @staticmethod
     async def activate_activation_code(activation_code: str) -> ActivationCodeResponse:

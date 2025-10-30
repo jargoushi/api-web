@@ -24,15 +24,15 @@ async def init_activation_codes(request: ActivationCodeBatchCreateRequest):
     return success_response(data=result)
 
 
-@router.post("/get", response_model=ApiResponse[list], summary="分发激活码")
-async def get_activation_codes(request: ActivationCodeGetRequest):
+@router.post("/distribute", response_model=ApiResponse[list], summary="派发激活码")
+async def distribute_activation_codes(request: ActivationCodeGetRequest):
     """
-    分发激活码（根据类型查询指定数量未使用的激活码，并更新状态为已分发）
+    派发激活码（根据类型查询指定数量未使用的激活码，并更新状态为已分发）
 
     - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
-    - **count**: 分发数量，默认1条
+    - **count**: 派发数量，默认1条
     """
-    activation_codes = await ActivationCodeService.get_activation_codes(request)
+    activation_codes = await ActivationCodeService.distribute_activation_codes(request)
     return success_response(data=activation_codes)
 
 
