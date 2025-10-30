@@ -4,8 +4,9 @@ from enum import Enum
 class ActivationCodeStatusEnum(Enum):
     """激活码状态枚举"""
     UNUSED = (0, "未使用")
-    USED = (1, "已使用")
-    INVALID = (2, "作废")
+    DISTRIBUTED = (1, "已分发")
+    ACTIVATED = (2, "已激活")
+    INVALID = (3, "作废")
 
     def __init__(self, code: int, desc: str):
         self.code = code  # 状态码

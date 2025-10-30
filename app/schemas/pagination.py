@@ -1,8 +1,8 @@
 from typing import Generic, TypeVar, List
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.schemas.base import BaseRequestModel
+from app.schemas.base import BaseRequestModel, BaseResponseModel
 
 T = TypeVar('T')
 
@@ -19,7 +19,7 @@ class PageRequest(BaseRequestModel):
         return min(offset, 100000)  # 限制最大偏移量为100000，避免过大偏移
 
 
-class PageResponse(BaseModel, Generic[T]):
+class PageResponse(BaseResponseModel, Generic[T]):
     """分页数据模型，不包含外层的 success/message"""
     total: int = Field(..., description="总记录数")
     page: int = Field(..., description="当前页码")

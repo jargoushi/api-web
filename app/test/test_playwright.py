@@ -47,7 +47,8 @@ class PlaywrightIntegrationTester:
         self.browser_ws_list: List[str] = []
         self.automation_tasks: List[asyncio.Task] = []
 
-    async def get_all_browsers(self) -> List[Dict[str, Any]]:
+    @staticmethod
+    async def get_all_browsers() -> List[Dict[str, Any]]:
         """获取所有浏览器窗口列表"""
         try:
             # 构建查询参数
@@ -100,7 +101,8 @@ class PlaywrightIntegrationTester:
             print(f"打开浏览器失败: {e}")
             return False
 
-    async def run_single_automation(self, ws_url: str, browser_id: str):
+    @staticmethod
+    async def run_single_automation(ws_url: str, browser_id: str):
         """
         使用run_automation方法执行单个自动化脚本
 
@@ -143,7 +145,8 @@ class PlaywrightIntegrationTester:
         except Exception as e:
             print(f"并发执行过程中出现错误: {e}")
 
-    async def close_all_browsers(self):
+    @staticmethod
+    async def close_all_browsers():
         """关闭所有浏览器窗口"""
         try:
             print("正在关闭所有浏览器窗口...")

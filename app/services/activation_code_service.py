@@ -97,8 +97,8 @@ class ActivationCodeService:
 
     @staticmethod
     async def get_activation_codes(request: ActivationCodeGetRequest) -> List[str]:
-        """获取激活码"""
-        log.info(f"获取激活码，类型：{request.type}，数量：{request.count}")
+        """分发激活码（获取激活码并设置为已分发状态）"""
+        log.info(f"分发激活码，类型：{request.type}，数量：{request.count}")
 
         # 查询指定类型未使用的激活码，按创建时间倒序
         codes = await ActivationCode.filter(
@@ -113,20 +113,45 @@ class ActivationCodeService:
 
         activation_codes = []
 
-        # 批量更新状态为已使用，使用枚举值
+        # 批量更新状态为已分发
         for code in codes:
-            # 激活码被激活
-            code.activate()
+            # 激活码被分发
+            code.distribute()
             await code.save()
 
             activation_codes.append(code.activation_code)
 
-        log.info(f"成功获取{len(activation_codes)}个激活码")
+        log.info(f"成功分发{len(activation_codes)}个激活码")
         return activation_codes
 
     @staticmethod
+    async def activate_activation_code(activation_code: str) -> ActivationCodeResponse:
+        """激活激活码（将已分发状态的激活码激活）"""
+        log.info(f"激活激活码：{activation_code}")
+
+        code = await ActivationCode.get_or_none(activation_code=activation_code)
+        if not code:
+            raise BusinessException(message="激活码不存在")
+
+        if code.status == ActivationCodeStatusEnum.INVALID.code:
+            raise BusinessException(message="激活码已作废，无法激活")
+
+        if code.status == ActivationCodeStatusEnum.UNUSED.code:
+            raise BusinessException(message="激活码未分发，请先分发激活码")
+
+        if code.status == ActivationCodeStatusEnum.ACTIVATED.code:
+            raise BusinessException(message="激活码已激活，无需重复激活")
+
+        # 激活激活码
+        code.activate()
+        await code.save()
+
+        log.info(f"激活码{activation_code}激活成功")
+        return ActivationCodeResponse.model_validate(code, from_attributes=True)
+
+    @staticmethod
     async def invalidate_activation_code(request: ActivationCodeInvalidateRequest) -> bool:
-        """激活码作废"""
+        """激活码作废（支持已分发和已激活状态的激活码作废）"""
         log.info(f"作废激活码：{request.activation_code}")
 
         code = await ActivationCode.get_or_none(activation_code=request.activation_code)
@@ -137,7 +162,7 @@ class ActivationCodeService:
             raise BusinessException(message="激活码已作废")
 
         if code.status == ActivationCodeStatusEnum.UNUSED.code:
-            raise BusinessException(message="激活码未使用，无法作废")
+            raise BusinessException(message="激活码未分发，无法作废")
 
         # 更新状态为作废
         code.status = ActivationCodeStatusEnum.INVALID.code
@@ -169,6 +194,12 @@ class ActivationCodeService:
 
         if params.status is not None:
             query = query.filter(status=params.status)
+
+        # 分发时间区间查询
+        if params.distributed_at_start:
+            query = query.filter(distributed_at__gte=params.distributed_at_start)
+        if params.distributed_at_end:
+            query = query.filter(distributed_at__lte=params.distributed_at_end)
 
         # 激活时间区间查询
         if params.activated_at_start:

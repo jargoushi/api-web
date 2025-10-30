@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from tortoise import fields
 from tortoise.models import Model
@@ -14,6 +14,7 @@ class ActivationCode(Model):
     """
     id = fields.IntField(pk=True, description="激活码ID")
     activation_code = fields.CharField(max_length=50, unique=True, description="激活码")
+    distributed_at = fields.DatetimeField(null=True, description="分发时间")
     activated_at = fields.DatetimeField(null=True, description="激活时间")
     expire_time = fields.DatetimeField(null=True, description="过期时间")
     type = fields.IntField(description="激活码类型")
@@ -66,11 +67,16 @@ class ActivationCode(Model):
             settings.ACTIVATION_GRACE_HOURS
         )
 
+    def distribute(self):
+        """分发激活码，设置分发时间和状态"""
+        self.distributed_at = datetime.now()
+        self.status = ActivationCodeStatusEnum.DISTRIBUTED.code
+
     def activate(self):
         """激活激活码，设置激活时间和过期时间"""
         self.activated_at = datetime.now()
         self.expire_time = self.calculate_expire_time(self.activated_at)
-        self.status = ActivationCodeStatusEnum.USED.code
+        self.status = ActivationCodeStatusEnum.ACTIVATED.code
 
     @property
     def is_expired(self) -> bool:

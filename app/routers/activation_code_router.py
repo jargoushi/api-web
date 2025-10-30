@@ -24,22 +24,33 @@ async def init_activation_codes(request: ActivationCodeBatchCreateRequest):
     return success_response(data=result)
 
 
-@router.post("/get", response_model=ApiResponse[list], summary="获取激活码")
+@router.post("/get", response_model=ApiResponse[list], summary="分发激活码")
 async def get_activation_codes(request: ActivationCodeGetRequest):
     """
-    获取激活码（根据类型查询最新的一条该类型未使用的激活码数据，并更新该数据状态为已使用）
+    分发激活码（根据类型查询指定数量未使用的激活码，并更新状态为已分发）
 
     - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
-    - **count**: 查询条数，默认1条
+    - **count**: 分发数量，默认1条
     """
     activation_codes = await ActivationCodeService.get_activation_codes(request)
     return success_response(data=activation_codes)
 
 
+@router.post("/activate", response_model=ApiResponse[ActivationCodeResponse], summary="激活激活码")
+async def activate_activation_code(activation_code: str):
+    """
+    激活激活码（将已分发状态的激活码激活，设置激活时间和过期时间）
+
+    - **activation_code**: 激活码
+    """
+    result = await ActivationCodeService.activate_activation_code(activation_code)
+    return success_response(data=result)
+
+
 @router.post("/invalidate", response_model=ApiResponse[bool], summary="激活码作废")
 async def invalidate_activation_code(request: ActivationCodeInvalidateRequest):
     """
-    激活码作废（根据激活码更新状态为2：作废）
+    激活码作废（将已分发或已激活状态的激活码作废）
 
     - **activation_code**: 激活码
     """
@@ -64,7 +75,9 @@ async def get_paginated_activation_codes(params: ActivationCodeQueryRequest):
     - **size**: 每页数量，默认为10，最大100
     - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
     - **activation_code**: 激活码（精准匹配）
-    - **status**: 激活码状态（0：未使用 1：已使用 2：作废）
+    - **status**: 激活码状态（0：未使用 1：已分发 2：已激活 3：作废）
+    - **distributed_at_start**: 分发时间开始（包含）
+    - **distributed_at_end**: 分发时间结束（包含）
     - **activated_at_start**: 激活时间开始（包含）
     - **activated_at_end**: 激活时间结束（包含）
     - **expire_time_start**: 过期时间开始（包含）

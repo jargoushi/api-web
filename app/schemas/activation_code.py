@@ -62,7 +62,9 @@ class ActivationCodeQueryRequest(PageRequest):
     """激活码列表查询参数（继承分页参数）"""
     type: Optional[int] = Field(None, ge=0, le=3, description="激活码类型")
     activation_code: Optional[str] = Field(None, min_length=1, max_length=50, description="激活码（精准匹配）")
-    status: Optional[int] = Field(None, ge=0, le=2, description="激活码状态")
+    status: Optional[int] = Field(None, ge=0, le=3, description="激活码状态")
+    distributed_at_start: Optional[datetime] = Field(None, description="分发时间开始")
+    distributed_at_end: Optional[datetime] = Field(None, description="分发时间结束")
     activated_at_start: Optional[datetime] = Field(None, description="激活时间开始")
     activated_at_end: Optional[datetime] = Field(None, description="激活时间结束")
     expire_time_start: Optional[datetime] = Field(None, description="过期时间开始")
@@ -72,6 +74,11 @@ class ActivationCodeQueryRequest(PageRequest):
     def validate_time_ranges(self):
         """验证所有时间区间"""
         errors = []
+
+        # 验证分发时间区间
+        if self.distributed_at_start and self.distributed_at_end:
+            if self.distributed_at_start > self.distributed_at_end:
+                errors.append("分发时间开始不能大于结束时间")
 
         # 验证激活时间区间
         if self.activated_at_start and self.activated_at_end:
@@ -93,10 +100,11 @@ class ActivationCodeResponse(BaseResponseModel):
     """激活码响应模型"""
     id: int = Field(..., description="激活码ID")
     activation_code: str = Field(..., description="激活码")
+    distributed_at: Optional[datetime] = Field(None, description="分发时间")
     expire_time: Optional[datetime] = Field(None, description="过期时间")  # 改为可选
     type: int = Field(..., description="类型码")
     type_name: str = Field(..., description="类型名称")
-    status: int = Field(..., description="是否已使用：0：未使用 1：已使用 2：作废")
+    status: int = Field(..., description="状态码：0：未使用 1：已分发 2：已激活 3：作废")
     status_name: str = Field(..., description="状态名称")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
