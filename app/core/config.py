@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"  # JWT算法
     JWT_EXPIRE_MINUTES: int = 1440  # Token有效期（分钟），默认24小时
 
+    # API配置
+    API_PREFIX: str = "/api"  # API路由前缀
+
     # 认证配置
     ENABLE_AUTH: bool = True  # 是否启用认证中间件
     TOKEN_REFRESH_THRESHOLD: int = 60  # Token刷新阈值（分钟），剩余时间少于阈值时建议刷新

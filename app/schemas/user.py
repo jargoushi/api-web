@@ -11,17 +11,13 @@ from app.schemas.response import BaseResponseModel
 class UserRegisterRequest(BaseModel):
     """用户注册请求模型"""
     username: str = Field(..., min_length=2, max_length=50, description="用户名")
-    password: str = Field(..., min_length=8, max_length=20, description="密码")
+    password: str = Field(..., min_length=6, max_length=20, description="密码")
     activation_code: str = Field(..., min_length=1, max_length=50, description="激活码")
 
     @field_validator('password')
     @classmethod
     def validate_password_complexity(cls, v: str) -> str:
         """密码复杂度校验"""
-        if len(v) < 8:
-            raise ValueError("密码长度不能少于8位")
-        if len(v) > 20:
-            raise ValueError("密码长度不能超过20位")
 
         # 检查是否包含大小写字母和数字
         has_upper = any(c.isupper() for c in v)

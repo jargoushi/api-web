@@ -71,6 +71,6 @@ def create_app() -> FastAPI:
     setup_exception_handlers(app)
 
     # 注册路由
-    app.include_router(api_router, prefix="/api")
+    app.include_router(api_router, prefix=settings.API_PREFIX)
 
     return app

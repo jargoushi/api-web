@@ -1,18 +1,20 @@
 import time
 from typing import Optional
-from urllib.request import Request
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from app.core.config import settings
+from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.util.jwt import get_jwt_manager, extract_token_from_header
-from app.models.user_session import UserSession
-from app.models.user import User
 from app.models.activation_code import ActivationCode
+from app.models.user import User
+from app.models.user_session import UserSession
+from app.schemas.response import error_response
+from app.util.jwt import get_jwt_manager
 
 
 def setup_middleware(app: FastAPI):
@@ -45,35 +47,68 @@ def setup_middleware(app: FastAPI):
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     """认证中间件 - 验证JWT token和用户状态"""
 
-    # 不需要认证的路径
-    EXCLUDED_PATHS = {
-        "/",
-        "/health",
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-        "/users/register",
-        "/users/login",
-        "/favicon.ico"
-    }
-
     def __init__(self, app):
         super().__init__(app)
         self.jwt_manager = get_jwt_manager()
+
+    @staticmethod
+    def get_public_paths() -> set:
+        """获取不需要认证的路径列表"""
+        api_prefix = settings.API_PREFIX
+
+        return {
+            # 系统路径
+            "/",
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/favicon.ico",
+            "/static",
+
+            # 公开API路径
+            f"{api_prefix}/auth/login",  # 登录
+            f"{api_prefix}/users/register",  # 用户注册
+
+            # 激活码相关路径（根据业务需求）
+            f"{api_prefix}/activation/init",
+            f"{api_prefix}/activation/distribute",
+            f"{api_prefix}/activation/activate",
+            f"{api_prefix}/activation/invalidate",
+            f"{api_prefix}/activation/pageList",
+        }
+
+    @staticmethod
+    def is_public_path(path: str) -> bool:
+        """检查路径是否为公开路径"""
+        public_paths = AuthenticationMiddleware.get_public_paths()
+
+        # 直接匹配
+        if path in public_paths:
+            return True
+
+        # 前缀匹配（主要用于静态资源）
+        for public_path in public_paths:
+            if path.startswith(public_path):
+                return True
+
+        return False
 
     async def dispatch(self, request: Request, call_next) -> Response:
         """处理请求认证"""
         path = request.url.path
 
-        # 检查是否在排除列表中
-        if self._is_excluded_path(path):
+        # 检查是否为公开路径（不需要认证）
+        if self.is_public_path(path):
             return await call_next(request)
 
         try:
             # 提取并验证token
             token = self._extract_token(request)
             if not token:
-                raise HTTPException(status_code=401, detail="缺少认证token")
+                return self._create_error_response(
+                    BusinessException(message="缺少认证token", code=401)
+                )
 
             # 验证token并获取用户信息
             payload = self.jwt_manager.verify_token(token)
@@ -83,12 +118,16 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             # 验证会话状态
             session = await self._validate_session(token, user_id, device_id)
             if not session:
-                raise HTTPException(status_code=401, detail="会话已失效，请重新登录")
+                return self._create_error_response(
+                    BusinessException(message="会话已失效，请重新登录", code=401)
+                )
 
             # 验证用户状态
             user = await self._validate_user(user_id)
             if not user:
-                raise HTTPException(status_code=401, detail="用户不存在")
+                return self._create_error_response(
+                    BusinessException(message="用户不存在", code=401)
+                )
 
             # 验证激活码状态
             await self._validate_activation_code(user)
@@ -102,24 +141,31 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             # 记录访问日志
             log.info(f"用户 {user.username} 访问 {path}")
 
-        except HTTPException:
-            raise
+        except BusinessException as e:
+            return self._create_error_response(e)
         except Exception as e:
             log.error(f"认证中间件错误: {str(e)}")
-            raise HTTPException(status_code=401, detail="认证失败")
+            return self._create_error_response(
+                BusinessException(message="认证失败", code=401)
+            )
 
         return await call_next(request)
 
-    def _is_excluded_path(self, path: str) -> bool:
-        """检查路径是否需要排除认证"""
-        return path in self.EXCLUDED_PATHS or path.startswith("/static")
+    @staticmethod
+    def _create_error_response(exc: BusinessException) -> JSONResponse:
+        """创建错误响应"""
+        return JSONResponse(
+            status_code=exc.code,
+            content=jsonable_encoder(error_response(message=exc.message, code=exc.code))
+        )
 
     def _extract_token(self, request: Request) -> Optional[str]:
         """从请求中提取token"""
         authorization = request.headers.get("Authorization")
         return self.jwt_manager.extract_token_from_header(authorization)
 
-    async def _validate_session(self, token: str, user_id: int, device_id: str) -> Optional[UserSession]:
+    @staticmethod
+    async def _validate_session(token: str, user_id: int, device_id: str) -> Optional[UserSession]:
         """验证会话状态"""
         session = await UserSession.get_session_by_token(token)
         if not session:
@@ -134,27 +180,29 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         return session
 
-    async def _validate_user(self, user_id: int) -> Optional[User]:
+    @staticmethod
+    async def _validate_user(user_id: int) -> Optional[User]:
         """验证用户状态"""
         user = await User.get_or_none(id=user_id)
         return user
 
-    async def _validate_activation_code(self, user: User) -> None:
+    @staticmethod
+    async def _validate_activation_code(user: User) -> None:
         """验证用户激活码状态"""
         if not user.activation_code:
-            raise HTTPException(status_code=401, detail="用户未绑定激活码")
+            raise BusinessException(message="用户未绑定激活码", code=401)
 
         activation_code_obj = await ActivationCode.get_or_none(activation_code=user.activation_code)
         if not activation_code_obj:
-            raise HTTPException(status_code=401, detail="激活码不存在")
+            raise BusinessException(message="激活码不存在", code=401)
 
         if activation_code_obj.is_expired:
-            raise HTTPException(status_code=401, detail="激活码已过期，请重新激活")
+            raise BusinessException(message="激活码已过期，请重新激活", code=401)
 
         # 检查激活码状态
         from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
         if activation_code_obj.status != ActivationCodeStatusEnum.ACTIVATED.code:
-            raise HTTPException(status_code=401, detail="激活码状态异常")
+            raise BusinessException(message="激活码状态异常", code=401)
 
 
 class ProcessTimeMiddleware(BaseHTTPMiddleware):
