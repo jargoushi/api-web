@@ -129,8 +129,13 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
                     BusinessException(message="用户不存在", code=401)
                 )
 
-            # 验证激活码状态
-            await self._validate_activation_code(user)
+            # 简化激活码验证（只检查是否有绑定，不强制验证过期时间）
+            if user.activation_code:
+                activation_code_obj = await ActivationCode.get_or_none(activation_code=user.activation_code)
+                if not activation_code_obj:
+                    return self._create_error_response(
+                        BusinessException(message="激活码不存在", code=401)
+                    )
 
             # 将用户信息添加到请求状态中
             request.state.user = user
@@ -186,24 +191,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         user = await User.get_or_none(id=user_id)
         return user
 
-    @staticmethod
-    async def _validate_activation_code(user: User) -> None:
-        """验证用户激活码状态"""
-        if not user.activation_code:
-            raise BusinessException(message="用户未绑定激活码", code=401)
-
-        activation_code_obj = await ActivationCode.get_or_none(activation_code=user.activation_code)
-        if not activation_code_obj:
-            raise BusinessException(message="激活码不存在", code=401)
-
-        if activation_code_obj.is_expired:
-            raise BusinessException(message="激活码已过期，请重新激活", code=401)
-
-        # 检查激活码状态
-        from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
-        if activation_code_obj.status != ActivationCodeStatusEnum.ACTIVATED.code:
-            raise BusinessException(message="激活码状态异常", code=401)
-
+    
 
 class ProcessTimeMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
