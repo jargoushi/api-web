@@ -1,6 +1,7 @@
 """
 认证上下文工具
 统一处理认证数据访问，简化路由代码
+支持直接调用和FastAPI依赖注入两种使用方式
 """
 
 from typing import Tuple
@@ -14,7 +15,7 @@ from app.models.user_session import UserSession
 
 def get_current_user(request: Request) -> User:
     """
-    获取当前登录用户
+    获取当前登录用户（支持直接调用和依赖注入）
 
     Args:
         request: FastAPI请求对象
@@ -24,6 +25,14 @@ def get_current_user(request: Request) -> User:
 
     Raises:
         BusinessException: 用户未登录时抛出异常
+
+    使用方式:
+        # 直接调用
+        user = get_current_user(request)
+
+        # 依赖注入
+        async def endpoint(user: User = Depends(get_current_user)):
+            pass
     """
     user = getattr(request.state, 'user', None)
     if not user:
@@ -33,7 +42,7 @@ def get_current_user(request: Request) -> User:
 
 def get_current_user_id(request: Request) -> int:
     """
-    获取当前登录用户的ID
+    获取当前登录用户ID（支持直接调用和依赖注入）
 
     Args:
         request: FastAPI请求对象
@@ -43,14 +52,24 @@ def get_current_user_id(request: Request) -> int:
 
     Raises:
         BusinessException: 用户未登录时抛出异常
+
+    使用方式:
+        # 直接调用
+        user_id = get_current_user_id(request)
+
+        # 依赖注入
+        async def endpoint(user_id: int = Depends(get_current_user_id)):
+            pass
     """
-    user = get_current_user(request)
-    return user.id
+    user_id = getattr(request.state, 'user_id', None)
+    if not user_id:
+        raise BusinessException(message="用户未登录", code=401)
+    return user_id
 
 
 def get_current_session(request: Request) -> UserSession:
     """
-    获取当前用户会话
+    获取当前用户会话（支持直接调用和依赖注入）
 
     Args:
         request: FastAPI请求对象
@@ -60,6 +79,14 @@ def get_current_session(request: Request) -> UserSession:
 
     Raises:
         BusinessException: 会话无效时抛出异常
+
+    使用方式:
+        # 直接调用
+        session = get_current_session(request)
+
+        # 依赖注入
+        async def endpoint(session: UserSession = Depends(get_current_session)):
+            pass
     """
     session = getattr(request.state, 'session', None)
     if not session:
@@ -69,7 +96,7 @@ def get_current_session(request: Request) -> UserSession:
 
 def get_current_device_id(request: Request) -> str:
     """
-    获取当前设备ID
+    获取当前设备ID（支持直接调用和依赖注入）
 
     Args:
         request: FastAPI请求对象
@@ -79,6 +106,14 @@ def get_current_device_id(request: Request) -> str:
 
     Raises:
         BusinessException: 设备信息无效时抛出异常
+
+    使用方式:
+        # 直接调用
+        device_id = get_current_device_id(request)
+
+        # 依赖注入
+        async def endpoint(device_id: str = Depends(get_current_device_id)):
+            pass
     """
     device_id = getattr(request.state, 'device_id', None)
     if not device_id:
@@ -98,6 +133,10 @@ def require_auth(request: Request) -> Tuple[User, UserSession]:
 
     Raises:
         BusinessException: 认证信息无效时抛出异常
+
+    使用方式:
+        # 直接调用
+        user, session = require_auth(request)
     """
     user = get_current_user(request)
     session = get_current_session(request)
@@ -116,6 +155,13 @@ def get_auth_info(request: Request) -> dict:
 
     Raises:
         BusinessException: 认证信息无效时抛出异常
+
+    使用方式:
+        # 直接调用
+        auth_info = get_auth_info(request)
+        user = auth_info["user"]
+        session = auth_info["session"]
+        device_id = auth_info["device_id"]
     """
     user = get_current_user(request)
     session = get_current_session(request)
@@ -126,29 +172,3 @@ def get_auth_info(request: Request) -> dict:
         "session": session,
         "device_id": device_id
     }
-
-
-# 依赖注入函数，用于FastAPI路由
-def get_current_user_dep(request: Request) -> User:
-    """
-    依赖注入函数，获取当前用户
-    使用方式: @router.post("/example", dependencies=[Depends(get_current_user_dep)])
-    """
-    return get_current_user(request)
-
-
-def get_current_user_id_dep(request: Request) -> int:
-    """
-    依赖注入函数，获取当前用户ID
-    使用方式:
-    async def some_endpoint(user_id: int = Depends(get_current_user_id_dep)):
-        ...
-    """
-    return get_current_user_id(request)
-
-
-def get_current_session_dep(request: Request) -> UserSession:
-    """
-    依赖注入函数，获取当前会话
-    """
-    return get_current_session(request)

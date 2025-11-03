@@ -4,11 +4,7 @@ from app.schemas.auth import LoginRequest, ChangePasswordRequest
 from app.schemas.response import ApiResponse, success_response
 from app.services.auth_service import AuthService
 from app.util.auth_context import (
-    get_current_user,
-    require_auth,
-    get_current_user_dep,
-    get_current_user_id_dep,
-    get_current_session_dep
+    get_current_user, get_current_user_id, get_current_session
 )
 
 router = APIRouter()
@@ -33,7 +29,7 @@ async def login_user(login_data: LoginRequest, request: Request):
 
 
 @router.post("/logout", summary="用户注销")
-async def logout_user(session=Depends(get_current_session_dep)):
+async def logout_user(session=Depends(get_current_session)):
     """
     用户注销
     """
@@ -42,7 +38,7 @@ async def logout_user(session=Depends(get_current_session_dep)):
 
 
 @router.post("/logout-all", summary="注销所有设备")
-async def logout_all_devices(user_id: int = Depends(get_current_user_id_dep)):
+async def logout_all_devices(user_id: int = Depends(get_current_user_id)):
     """
     注销用户的所有设备
     """
@@ -51,7 +47,7 @@ async def logout_all_devices(user_id: int = Depends(get_current_user_id_dep)):
 
 
 @router.get("/profile", summary="获取用户档案")
-async def get_user_profile(user=Depends(get_current_user_dep)):
+async def get_user_profile(user=Depends(get_current_user)):
     """
     获取当前用户的基本信息
     """
@@ -69,7 +65,7 @@ async def get_user_profile(user=Depends(get_current_user_dep)):
 @router.post("/change-password", summary="修改密码")
 async def change_password(
     password_data: ChangePasswordRequest,
-    user=Depends(get_current_user_dep)
+    user=Depends(get_current_user)
 ):
     """
     修改用户密码
