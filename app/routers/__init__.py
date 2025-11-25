@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.routers import activation_code_router
 from app.routers import auth_router
 from app.routers import browser_router
+from app.routers import common_router
 from app.routers import index_router
 from app.routers import user_router
 
@@ -24,6 +25,9 @@ def setup_routers():
 
     # 系统相关路由（通常不需要认证）
     api_router.include_router(index_router.router, prefix="/index", tags=["系统"])
+
+    # 公共业务路由（枚举配置、字典数据等，不需要认证）
+    api_router.include_router(common_router.router, prefix="/common", tags=["公共接口"])
 
     # 用户管理相关路由（需要认证 - 由中间件控制）
     api_router.include_router(user_router.router, prefix="/users", tags=["用户管理"])

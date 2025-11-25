@@ -8,9 +8,12 @@ class ActivationCodeStatusEnum(Enum):
     ACTIVATED = (2, "已激活")
     INVALID = (3, "作废")
 
-    def __init__(self, code: int, desc: str):
-        self.code = code  # 状态码
-        self.desc = desc  # 状态描述
+    def __new__(cls, code: int, desc: str):
+
+        obj = object.__new__(cls)
+        obj.code = code
+        obj.desc = desc
+        return obj
 
     @classmethod
     def from_code(cls, code: int) -> "ActivationCodeStatusEnum":

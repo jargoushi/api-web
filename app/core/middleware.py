@@ -70,6 +70,9 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             f"{api_prefix}/auth/login",  # 登录
             f"{api_prefix}/users/register",  # 用户注册
 
+            # 公共接口路径（枚举配置、字典数据等）
+            f"{api_prefix}/common/channels",  # 渠道列表
+
             # 激活码相关路径（根据业务需求）
             f"{api_prefix}/activation/init",
             f"{api_prefix}/activation/distribute",
@@ -191,7 +194,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         user = await User.get_or_none(id=user_id)
         return user
 
-    
+
 
 class ProcessTimeMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
