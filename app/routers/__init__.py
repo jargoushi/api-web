@@ -5,6 +5,8 @@ from app.routers import auth_router
 from app.routers import browser_router
 from app.routers import common_router
 from app.routers import index_router
+from app.routers import monitor_router
+from app.routers import task_router
 from app.routers import user_router
 
 # 创建主 APIRouter，作为所有子路由的入口
@@ -31,6 +33,12 @@ def setup_routers():
 
     # 用户管理相关路由（需要认证 - 由中间件控制）
     api_router.include_router(user_router.router, prefix="/users", tags=["用户管理"])
+
+    # 监控中心相关路由（需要认证 - 由中间件控制）
+    api_router.include_router(monitor_router.router, prefix="/monitor", tags=["监控中心"])
+
+    # 监控任务相关路由（独立服务 - 需要认证）
+    api_router.include_router(task_router.router, prefix="/task", tags=["任务管理"])
 
     # 比特浏览器相关路由（需要认证 - 由中间件控制）
     api_router.include_router(browser_router.router, prefix="/browser", tags=["比特浏览器"])
