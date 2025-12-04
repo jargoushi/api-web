@@ -2,8 +2,7 @@ from typing import List
 
 from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.models.monitor.monitor_config import MonitorConfig
-from app.models.monitor.monitor_daily_stats import MonitorDailyStats
+from app.repositories.monitor import MonitorConfigRepository, MonitorDailyStatsRepository
 from app.schemas.monitor.monitor import (
     MonitorConfigCreateRequest,
     MonitorConfigUpdateRequest,
@@ -13,19 +12,43 @@ from app.schemas.monitor.monitor import (
     MonitorDailyStatsQueryRequest,
     MonitorDailyStatsResponse
 )
+from app.util.time_util import get_utc_now
 
 
 class MonitorService:
-    """监控服务"""
+    """监控服务类"""
 
-    @staticmethod
-    async def create_monitor_config(user_id: int, request: MonitorConfigCreateRequest) -> MonitorConfigResponse:
-        """创建监控配置"""
+    def __init__(
+        self,
+        config_repository: MonitorConfigRepository = None,
+        stats_repository: MonitorDailyStatsRepository = None
+    ):
+        """
+        初始化服务
+
+        Args:
+            config_repository: 监控配置仓储实例
+            stats_repository: 监控每日数据仓储实例
+        """
+        self.config_repository = config_repository or MonitorConfigRepository()
+        self.stats_repository = stats_repository or MonitorDailyStatsRepository()
+
+    async def create_monitor_config(self, user_id: int, request: MonitorConfigCreateRequest) -> MonitorConfigResponse:
+        """
+        创建监控配置
+
+        Args:
+            user_id: 用户 ID
+            request: 创建请求
+
+        Returns:
+            监控配置响应
+        """
         log.info(f"用户{user_id}创建监控配置，渠道：{request.channel_code}，链接：{request.target_url}")
 
         # TODO: 执行爬虫任务解析链接，获取账号信息
 
-        config = await MonitorConfig.create(
+        config = await self.config_repository.create_monitor_config(
             user_id=user_id,
             channel_code=request.channel_code,
             target_url=request.target_url,
@@ -35,97 +58,154 @@ class MonitorService:
         log.info(f"监控配置创建成功，ID：{config.id}")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
-    @staticmethod
-    def get_monitor_config_queryset(user_id: int, params: MonitorConfigQueryRequest):
-        """获取监控配置查询集"""
-        query = MonitorConfig.filter(user_id=user_id, deleted_at__isnull=True)
+    async def get_monitor_config_list(self, user_id: int, params: MonitorConfigQueryRequest) -> List[MonitorConfigResponse]:
+        """
+        获取监控配置列表
 
-        if params.account_name:
-            query = query.filter(account_name__icontains=params.account_name)
+        Args:
+            user_id: 用户 ID
+            params: 查询参数
 
-        if params.channel_code is not None:
-            query = query.filter(channel_code=params.channel_code)
+        Returns:
+            监控配置列表
+        """
+        configs = await self.config_repository.find_user_configs(
+            user_id=user_id,
+            account_name=params.account_name,
+            channel_code=params.channel_code,
+            is_active=params.is_active,
+            created_at_start=params.created_at_start,
+            created_at_end=params.created_at_end,
+            include_deleted=False
+        )
 
-        if params.is_active is not None:
-            query = query.filter(is_active=params.is_active)
+        return [MonitorConfigResponse.model_validate(config, from_attributes=True) for config in configs]
 
-        if params.created_at_start:
-            query = query.filter(created_at__gte=params.created_at_start)
+    async def update_monitor_config(
+        self,
+        user_id: int,
+        config_id: int,
+        request: MonitorConfigUpdateRequest
+    ) -> MonitorConfigResponse:
+        """
+        修改监控配置
 
-        if params.created_at_end:
-            query = query.filter(created_at__lte=params.created_at_end)
+        Args:
+            user_id: 用户 ID
+            config_id: 配置 ID
+            request: 更新请求
 
-        return query.order_by("-created_at")
+        Returns:
+            监控配置响应
 
-    @staticmethod
-    async def update_monitor_config(user_id: int, config_id: int,
-                                    request: MonitorConfigUpdateRequest) -> MonitorConfigResponse:
-        """修改监控配置"""
+        Raises:
+            BusinessException: 监控配置不存在
+        """
         log.info(f"用户{user_id}修改监控配置{config_id}，新链接：{request.target_url}")
 
-        config = await MonitorConfig.get_or_none(id=config_id, user_id=user_id, deleted_at__isnull=True)
+        # 查询配置
+        config = await self.config_repository.find_by_id(config_id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
         # TODO: 执行爬虫任务解析新链接
 
-        # 批量更新字段
-        update_data = request.model_dump(exclude_unset=True)
-        config.update_from_dict(update_data)
-        await config.save()
+        config = await self.config_repository.update_monitor_config(
+            config,
+            target_url=request.target_url if request.target_url else None
+        )
 
         log.info(f"监控配置{config_id}修改成功")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
-    @staticmethod
-    async def toggle_monitor_config(user_id: int, config_id: int,
-                                    request: MonitorConfigToggleRequest) -> MonitorConfigResponse:
-        """切换监控状态"""
+    async def toggle_monitor_config(
+        self,
+        user_id: int,
+        config_id: int,
+        request: MonitorConfigToggleRequest
+    ) -> MonitorConfigResponse:
+        """
+        切换监控状态
+
+        Args:
+            user_id: 用户 ID
+            config_id: 配置 ID
+            request: 切换请求
+
+        Returns:
+            监控配置响应
+
+        Raises:
+            BusinessException: 监控配置不存在
+        """
         log.info(f"用户{user_id}切换监控配置{config_id}状态为：{request.is_active}")
 
-        config = await MonitorConfig.get_or_none(id=config_id, user_id=user_id, deleted_at__isnull=True)
+        # 查询配置
+        config = await self.config_repository.find_by_id(config_id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        # 批量更新字段
-        update_data = request.model_dump(exclude_unset=True)
-        config.update_from_dict(update_data)
-        await config.save()
+        config = await self.config_repository.toggle_monitor_status(config, request.is_active)
 
         log.info(f"监控配置{config_id}状态切换成功")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
-    @staticmethod
-    async def delete_monitor_config(user_id: int, config_id: int) -> bool:
-        """删除监控配置（软删除）"""
+    async def delete_monitor_config(self, user_id: int, config_id: int) -> bool:
+        """
+        删除监控配置（软删除）
+
+        Args:
+            user_id: 用户 ID
+            config_id: 配置 ID
+
+        Returns:
+            是否删除成功
+
+        Raises:
+            BusinessException: 监控配置不存在
+        """
         log.info(f"用户{user_id}删除监控配置{config_id}")
 
-        config = await MonitorConfig.get_or_none(id=config_id, user_id=user_id, deleted_at__isnull=True)
+        # 查询配置
+        config = await self.config_repository.find_by_id(config_id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        config.soft_delete()
-        await config.save()
+        await self.config_repository.soft_delete_config(config)
 
         log.info(f"监控配置{config_id}删除成功")
         return True
 
-    @staticmethod
-    async def get_daily_stats(user_id: int, request: MonitorDailyStatsQueryRequest) -> List[MonitorDailyStatsResponse]:
-        """查询每日明细数据"""
+    async def get_daily_stats(
+        self,
+        user_id: int,
+        request: MonitorDailyStatsQueryRequest
+    ) -> List[MonitorDailyStatsResponse]:
+        """
+        查询每日明细数据
+
+        Args:
+            user_id: 用户 ID
+            request: 查询请求
+
+        Returns:
+            每日数据列表
+
+        Raises:
+            BusinessException: 监控配置不存在
+        """
         log.info(
             f"用户{user_id}查询配置{request.config_id}的每日数据，时间范围：{request.start_date} ~ {request.end_date}")
 
         # 验证配置归属
-        config = await MonitorConfig.get_or_none(id=request.config_id, user_id=user_id, deleted_at__isnull=True)
+        config = await self.config_repository.find_by_id(request.config_id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        # 查询每日数据
-        stats = await MonitorDailyStats.filter(
+        stats = await self.stats_repository.find_by_config_and_date_range(
             config_id=request.config_id,
-            stat_date__gte=request.start_date,
-            stat_date__lte=request.end_date
-        ).order_by("stat_date")
+            start_date=request.start_date,
+            end_date=request.end_date
+        )
 
         return [MonitorDailyStatsResponse.model_validate(stat, from_attributes=True) for stat in stats]

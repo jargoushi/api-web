@@ -8,6 +8,9 @@ from app.util.auth_context import get_current_user_id
 
 router = APIRouter()
 
+# 创建 Service 实例
+user_service = UserService()
+
 
 @router.post("/register", response_model=ApiResponse[UserResponse], summary="用户注册")
 async def register_user(user_data: UserRegisterRequest):
@@ -18,7 +21,7 @@ async def register_user(user_data: UserRegisterRequest):
     - **password**: 密码（必填，8-20位，必须包含大小写字母和数字）
     - **activation_code**: 激活码（必填）
     """
-    user = await UserService.register_user(user_data)
+    user = await user_service.register_user(user_data)
     return success_response(data=user)
 
 
@@ -27,7 +30,7 @@ async def get_user(user_id: int = Depends(get_current_user_id)):
     """
     根据 ID 获取用户信息
     """
-    user = await UserService.get_user_by_id(user_id)
+    user = await user_service.get_user_by_id(user_id)
     return success_response(data=user)
 
 
@@ -40,7 +43,7 @@ async def update_user(user_data: UserUpdateRequest, user_id: int = Depends(get_c
     - **phone**: 手机号（可选，中国大陆格式）
     - **email**: 邮箱（可选）
     """
-    user = await UserService.update_user(user_id, user_data)
+    user = await user_service.update_user(user_id, user_data)
     return success_response(data=user)
 
 
@@ -56,5 +59,5 @@ async def get_paginated_users(params: UserQueryRequest = Depends()):
     - **activation_code**: 激活码模糊匹配（可选）
     """
 
-    query = UserService.get_user_queryset(params)
-    return await paginated_response(query, params)
+    users = await user_service.get_user_list(params)
+    return await paginated_response(users, params)

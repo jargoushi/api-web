@@ -9,6 +9,9 @@ from app.util.auth_context import (
 
 router = APIRouter()
 
+# 创建 Service 实例
+auth_service = AuthService()
+
 
 @router.post("/login", response_model=ApiResponse[str], summary="用户登录")
 async def login_user(login_data: LoginRequest, request: Request):
@@ -20,7 +23,7 @@ async def login_user(login_data: LoginRequest, request: Request):
 
     登录成功后返回JWT token和用户信息
     """
-    access_token = await AuthService.login_user(
+    access_token = await auth_service.login_user(
         username=login_data.username,
         password=login_data.password,
         request=request
@@ -33,7 +36,7 @@ async def logout_user(session=Depends(get_current_session)):
     """
     用户注销
     """
-    await AuthService.logout_user(session.token)
+    await auth_service.logout_user(session.token)
     return success_response(data=True)
 
 
@@ -42,7 +45,7 @@ async def logout_all_devices(user_id: int = Depends(get_current_user_id)):
     """
     注销用户的所有设备
     """
-    await AuthService.logout_all_devices(user_id)
+    await auth_service.logout_all_devices(user_id)
     return success_response(data=True)
 
 
@@ -72,7 +75,7 @@ async def change_password(
 
     - **new_password**: 新密码（8-20位，必须包含大小写字母和数字）
     """
-    await AuthService.change_password(
+    await auth_service.change_password(
         user=user,
         new_password=password_data.new_password
     )

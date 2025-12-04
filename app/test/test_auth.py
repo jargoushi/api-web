@@ -18,6 +18,7 @@ from app.schemas.account.auth import LoginRequest
 from app.schemas.account.activation import ActivationCodeBatchCreateRequest, ActivationCodeCreateItem, ActivationCodeGetRequest
 from app.services.account.user_service import UserService
 from app.services.account.activation_service import ActivationCodeService
+from app.services.account.user_session_service import UserSessionService
 from app.util.jwt import get_jwt_manager
 from app.enums.account.activation_type import ActivationTypeEnum
 from app.enums.account.activation_status import ActivationCodeStatusEnum
@@ -31,6 +32,7 @@ class AuthModuleTester:
         self.test_users: list = []
         self.test_activation_codes: list = []
         self.client = None
+        self.session_service = UserSessionService()
 
     @staticmethod
     async def setup_test_database():
@@ -220,7 +222,7 @@ class AuthModuleTester:
             assert login_info["device_info"]["ip_address"] == "10.0.0.50", "IP地址不匹配"
 
             # 验证会话创建
-            session = await UserSession.get_session_by_token(login_info["access_token"])
+            session = await self.session_service.get_session_by_token(login_info["access_token"])
             assert session is not None, "会话未创建"
             assert session.user_id == test_user["id"], "会话用户ID不匹配"
 
@@ -257,7 +259,7 @@ class AuthModuleTester:
             )
 
             token1 = login_info1["access_token"]
-            session1 = await UserSession.get_session_by_token(token1)
+            session1 = await self.session_service.get_session_by_token(token1)
             assert session1 is not None, "第一次登录会话未创建"
 
             # 第二次登录（不同设备）
@@ -273,11 +275,11 @@ class AuthModuleTester:
             )
 
             token2 = login_info2["access_token"]
-            session2 = await UserSession.get_session_by_token(token2)
+            session2 = await self.session_service.get_session_by_token(token2)
             assert session2 is not None, "第二次登录会话未创建"
 
             # 验证第一个会话被踢出
-            old_session1 = await UserSession.get_session_by_token(token1)
+            old_session1 = await self.session_service.get_session_by_token(token1)
             assert old_session1 is None, "旧会话应该被踢出"
 
             # 验证数据库中只有一个活跃会话
@@ -321,7 +323,7 @@ class AuthModuleTester:
             token = login_info["access_token"]
 
             # 验证会话存在
-            session = await UserSession.get_session_by_token(token)
+            session = await self.session_service.get_session_by_token(token)
             assert session is not None, "登录后应该存在会话"
 
             # 注销用户
@@ -329,7 +331,7 @@ class AuthModuleTester:
             assert logout_success is True, "注销应该成功"
 
             # 验证会话被删除
-            deleted_session = await UserSession.get_session_by_token(token)
+            deleted_session = await self.session_service.get_session_by_token(token)
             assert deleted_session is None, "注销后会话应该被删除"
 
             self.log_test_result(
@@ -449,11 +451,11 @@ class AuthModuleTester:
             assert is_blacklisted is True, "旧token应该被加入黑名单"
 
             # 验证旧会话被删除
-            old_session = await UserSession.get_session_by_token(old_token)
+            old_session = await self.session_service.get_session_by_token(old_token)
             assert old_session is None, "旧会话应该被删除"
 
             # 验证新会话被创建
-            new_session = await UserSession.get_session_by_token(new_token)
+            new_session = await self.session_service.get_session_by_token(new_token)
             assert new_session is not None, "新会话应该被创建"
             assert new_session.user_id == test_user["id"], "新会话用户ID应该匹配"
 
@@ -619,7 +621,7 @@ class AuthModuleTester:
             assert payload["user_id"] == user.id, "token用户ID应该匹配"
 
             # 3. 检查会话
-            session = await UserSession.get_session_by_token(token)
+            session = await self.session_service.get_session_by_token(token)
             assert session is not None, "应该存在活跃会话"
             assert session.is_active is True, "会话应该是活跃的"
 
@@ -633,7 +635,7 @@ class AuthModuleTester:
             assert logout_success is True, "注销应该成功"
 
             # 6. 验证注销后状态
-            final_session = await UserSession.get_session_by_token(new_token)
+            final_session = await self.session_service.get_session_by_token(new_token)
             assert final_session is None, "注销后会话应该被删除"
 
             jwt_manager = get_jwt_manager()

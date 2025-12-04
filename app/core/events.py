@@ -53,7 +53,6 @@ def create_app() -> FastAPI:
     """
     应用工厂函数
     """
-    # 创建 FastAPI 应用实例
     app = FastAPI(
         title=settings.app_name,
         description=settings.description,
@@ -62,6 +61,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,  # 使用生命周期管理
         docs_url="/docs" if settings.debug else None,
         redoc_url="/redoc" if settings.debug else None,
+        swagger_ui_parameters={
+            "docExpansion": "none",  # 默认折叠所有接口
+            "defaultModelsExpandDepth": -1,  # 隐藏 Schemas 区域
+        },
     )
 
     # 设置中间件

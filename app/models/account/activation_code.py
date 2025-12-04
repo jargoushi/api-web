@@ -1,27 +1,24 @@
-import datetime
-
 from tortoise import fields
-from tortoise.models import Model
 
-from app.core.config import settings
+from app.models.base import BaseModel
 from app.enums.account.activation_type import ActivationTypeEnum
 from app.enums.account.activation_status import ActivationCodeStatusEnum
-from app.util.time_util import get_utc_now, normalize_datetime, is_expired
+from app.util.time_util import normalize_datetime, is_expired
 
 
-class ActivationCode(Model):
+class ActivationCode(BaseModel):
     """
     激活码模型
+
+    纯数据模型，只包含字段定义和简单的属性访问器
+    业务逻辑由 Service 层处理
     """
-    id = fields.IntField(pk=True, description="激活码ID")
     activation_code = fields.CharField(max_length=50, unique=True, description="激活码")
     distributed_at = fields.DatetimeField(null=True, description="分发时间")
     activated_at = fields.DatetimeField(null=True, description="激活时间")
     expire_time = fields.DatetimeField(null=True, description="过期时间")
     type = fields.IntField(description="激活码类型")
-    status = fields.IntField(default=ActivationCodeStatusEnum.UNUSED.code, description="是否已使用")
-    created_at = fields.DatetimeField(auto_now_add=True, description="创建时间")
-    updated_at = fields.DatetimeField(auto_now=True, description="更新时间")
+    status = fields.IntField(default=ActivationCodeStatusEnum.UNUSED.code, description="激活码状态")
 
     class Meta:
         table = "activation_codes"
@@ -47,45 +44,14 @@ class ActivationCode(Model):
         """获取状态名称"""
         return self.status_enum.desc
 
-    def calculate_expire_time(self, activated_time: datetime = None) -> datetime:
-        """
-        计算过期时间
-
-        Args:
-            activated_time: 激活时间，如果为None则使用当前实例的activated_at
-
-        Returns:
-            计算后的过期时间
-        """
-        if activated_time is None:
-            activated_time = self.activated_at
-
-        if not activated_time:
-            raise ValueError("激活时间不能为空")
-
-        return self.type_enum.get_expire_time_from(
-            activated_time,
-            settings.ACTIVATION_GRACE_HOURS
-        )
-
-    def distribute(self):
-        """分发激活码，设置分发时间和状态"""
-        self.distributed_at = get_utc_now()
-        self.status = ActivationCodeStatusEnum.DISTRIBUTED.code
-
-    def activate(self):
-        """激活激活码，设置激活时间和过期时间"""
-        self.activated_at = get_utc_now()
-        self.expire_time = self.calculate_expire_time(self.activated_at)
-        self.status = ActivationCodeStatusEnum.ACTIVATED.code
-
-    def invalidate(self):
-        """作废激活码，设置状态为已作废"""
-        self.status = ActivationCodeStatusEnum.INVALID.code
-
     @property
     def is_expired(self) -> bool:
-        """检查是否已过期"""
+        """
+        检查是否已过期
+
+        Returns:
+            bool: True 表示已过期，False 表示未过期或未激活
+        """
         if not self.expire_time:  # 未激活的没有过期时间
             return False
 

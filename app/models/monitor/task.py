@@ -1,14 +1,14 @@
 from tortoise import fields
-from tortoise.models import Model
 
+from app.models.base import BaseModel
 from app.enums.monitor.channel import ChannelEnum
 from app.enums.monitor.task_status import TaskStatusEnum
 from app.enums.monitor.task_type import TaskTypeEnum
 
 
-class Task(Model):
+class Task(BaseModel):
     """监控任务模型"""
-    id = fields.IntField(pk=True, description="任务ID")
+    # 基础字段 (id, created_at, updated_at) 继承自 BaseModel
     channel_code = fields.IntField(description="渠道编码")
     task_type = fields.IntField(description="任务类型")
     biz_id = fields.IntField(description="业务ID")
@@ -16,7 +16,6 @@ class Task(Model):
     schedule_date = fields.DateField(description="调度日期")
     error_msg = fields.TextField(null=True, description="异常信息栈")
     duration_ms = fields.IntField(default=0, description="耗时(ms)")
-    created_at = fields.DatetimeField(auto_now_add=True, description="任务创建时间")
     started_at = fields.DatetimeField(null=True, description="开始执行时间")
     finished_at = fields.DatetimeField(null=True, description="结束执行时间")
 

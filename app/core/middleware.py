@@ -14,6 +14,7 @@ from app.models.account.activation_code import ActivationCode
 from app.models.account.user import User
 from app.models.account.user_session import UserSession
 from app.schemas.common.response import error_response
+from app.services.account.user_session_service import UserSessionService
 from app.util.jwt import get_jwt_manager
 
 
@@ -186,11 +187,11 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         authorization = request.headers.get("Authorization")
         return self.jwt_manager.extract_token_from_header(authorization)
 
-    @staticmethod
-    async def _validate_session(token: str, user_id: int, device_id: str) -> Optional[UserSession]:
+    async def _validate_session(self, token: str, user_id: int, device_id: str) -> Optional[UserSession]:
         """验证会话状态"""
         try:
-            session = await UserSession.get_session_by_token(token)
+            session_service = UserSessionService()
+            session = await session_service.get_session_by_token(token)
             if not session:
                 log.debug(f"会话不存在: user_id={user_id}")
                 return None
@@ -199,7 +200,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             if session.user_id != user_id or session.device_id != device_id:
                 log.warning(f"会话信息不匹配: token_user_id={session.user_id}, token_device_id={session.device_id}")
                 # 自动清理异常会话
-                await session.delete()
+                await session_service.revoke_session(token)
                 return None
 
             return session

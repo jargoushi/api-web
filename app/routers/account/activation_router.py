@@ -11,6 +11,9 @@ from app.services.account.activation_service import ActivationCodeService
 
 router = APIRouter()
 
+# 创建 Service 实例
+activation_service = ActivationCodeService()
+
 
 @router.post("/init", response_model=ApiResponse[ActivationCodeBatchResponse], summary="初始化激活码数据")
 async def init_activation_codes(request: ActivationCodeBatchCreateRequest):
@@ -20,7 +23,7 @@ async def init_activation_codes(request: ActivationCodeBatchCreateRequest):
     - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
     - **count**: 生成数量
     """
-    result = await ActivationCodeService.init_activation_codes(request)
+    result = await activation_service.init_activation_codes(request)
     return success_response(data=result)
 
 
@@ -32,7 +35,7 @@ async def distribute_activation_codes(request: ActivationCodeGetRequest):
     - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
     - **count**: 派发数量，默认1条
     """
-    activation_codes = await ActivationCodeService.distribute_activation_codes(request)
+    activation_codes = await activation_service.distribute_activation_codes(request)
     return success_response(data=activation_codes)
 
 
@@ -43,7 +46,7 @@ async def activate_activation_code(activation_code: str):
 
     - **activation_code**: 激活码
     """
-    result = await ActivationCodeService.activate_activation_code(activation_code)
+    result = await activation_service.activate_activation_code(activation_code)
     return success_response(data=result)
 
 
@@ -54,7 +57,7 @@ async def invalidate_activation_code(request: ActivationCodeInvalidateRequest):
 
     - **activation_code**: 激活码
     """
-    result = await ActivationCodeService.invalidate_activation_code(request)
+    result = await activation_service.invalidate_activation_code(request)
     return success_response(data=result)
 
 
@@ -63,7 +66,7 @@ async def get_activation_code_detail(activation_code: str):
     """
     根据激活码获取详情信息
     """
-    result = await ActivationCodeService.get_activation_code_by_code(activation_code)
+    result = await activation_service.get_activation_code_by_code(activation_code)
     return success_response(data=result)
 
 
@@ -83,5 +86,5 @@ async def get_paginated_activation_codes(params: ActivationCodeQueryRequest):
     - **expire_time_start**: 过期时间开始（包含）
     - **expire_time_end**: 过期时间结束（包含）
     """
-    query = ActivationCodeService.get_activation_code_queryset(params)
-    return await paginated_response(query, params)
+    codes = await activation_service.get_activation_code_list(params)
+    return await paginated_response(codes, params)
