@@ -9,8 +9,8 @@ from typing import Tuple
 from fastapi import Request
 
 from app.core.exceptions import BusinessException
-from app.models.user import User
-from app.models.user_session import UserSession
+from app.models.account.user import User
+from app.models.account.user_session import UserSession
 
 
 def get_current_user(request: Request) -> User:

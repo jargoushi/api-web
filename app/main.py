@@ -1,5 +1,5 @@
 from app.core.events import create_app
-from app.schemas.response import success_response
+from app.schemas.common.response import success_response
 
 # 创建应用实例
 app = create_app()

@@ -2,8 +2,8 @@
 import asyncio
 from typing import List, Dict, Any
 
-from app.schemas.bit_browser import BrowserListRequest, BrowserOpenRequest
-from app.services.browser_service import bit_browser_service
+from app.schemas.monitor.browser import BrowserListRequest, BrowserOpenRequest
+from app.services.monitor.browser_service import bit_browser_service
 from app.util.Playwright_util import PlaywrightUtil
 
 

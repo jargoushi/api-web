@@ -10,10 +10,10 @@ from starlette.responses import Response, JSONResponse
 from app.core.config import settings
 from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.models.activation_code import ActivationCode
-from app.models.user import User
-from app.models.user_session import UserSession
-from app.schemas.response import error_response
+from app.models.account.activation_code import ActivationCode
+from app.models.account.user import User
+from app.models.account.user_session import UserSession
+from app.schemas.common.response import error_response
 from app.util.jwt import get_jwt_manager
 
 
@@ -33,8 +33,9 @@ def setup_middleware(app: FastAPI):
     # 这里可以添加其他中间件
     # 例如：请求日志中间件、安全头中间件、限流中间件等
 
-    # 认证中间件
-    app.add_middleware(AuthenticationMiddleware)
+    # 认证中间件（根据配置决定是否启用）
+    if settings.ENABLE_AUTH:
+        app.add_middleware(AuthenticationMiddleware)
 
     if settings.debug:
         # 开发环境专用中间件
@@ -90,9 +91,11 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         if path in public_paths:
             return True
 
-        # 前缀匹配（主要用于静态资源）
-        for public_path in public_paths:
-            if path.startswith(public_path):
+        # 前缀匹配（主要用于静态资源和文档）
+        # 注意：需要精确匹配，避免 "/" 匹配所有路径
+        static_prefixes = ["/static", "/docs", "/redoc"]
+        for prefix in static_prefixes:
+            if path.startswith(prefix):
                 return True
 
         return False
@@ -103,7 +106,11 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         # 检查是否为公开路径（不需要认证）
         if self.is_public_path(path):
+            log.debug(f"公开路径，跳过认证: {path}")
             return await call_next(request)
+
+        # 记录需要认证的路径
+        log.debug(f"需要认证的路径: {path}")
 
         try:
             # 提取并验证token
@@ -134,10 +141,17 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
             # 简化激活码验证（只检查是否有绑定，不强制验证过期时间）
             if user.activation_code:
-                activation_code_obj = await ActivationCode.get_or_none(activation_code=user.activation_code)
-                if not activation_code_obj:
+                try:
+                    activation_code_obj = await ActivationCode.get_or_none(activation_code=user.activation_code)
+                    if not activation_code_obj:
+                        log.warning(f"用户 {user.username} 的激活码不存在: {user.activation_code}")
+                        return self._create_error_response(
+                            BusinessException(message="激活码不存在", code=401)
+                        )
+                except Exception as e:
+                    log.error(f"验证激活码时出错: {str(e)}")
                     return self._create_error_response(
-                        BusinessException(message="激活码不存在", code=401)
+                        BusinessException(message="激活码验证失败", code=500)
                     )
 
             # 将用户信息添加到请求状态中
@@ -175,24 +189,35 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     @staticmethod
     async def _validate_session(token: str, user_id: int, device_id: str) -> Optional[UserSession]:
         """验证会话状态"""
-        session = await UserSession.get_session_by_token(token)
-        if not session:
-            return None
+        try:
+            session = await UserSession.get_session_by_token(token)
+            if not session:
+                log.debug(f"会话不存在: user_id={user_id}")
+                return None
 
-        # 验证用户ID和设备ID匹配
-        if session.user_id != user_id or session.device_id != device_id:
-            log.warning(f"会话信息不匹配: token_user_id={session.user_id}, token_device_id={session.device_id}")
-            # 自动清理异常会话
-            await session.delete()
-            return None
+            # 验证用户ID和设备ID匹配
+            if session.user_id != user_id or session.device_id != device_id:
+                log.warning(f"会话信息不匹配: token_user_id={session.user_id}, token_device_id={session.device_id}")
+                # 自动清理异常会话
+                await session.delete()
+                return None
 
-        return session
+            return session
+        except Exception as e:
+            log.error(f"验证会话时出错: {str(e)}")
+            return None
 
     @staticmethod
     async def _validate_user(user_id: int) -> Optional[User]:
         """验证用户状态"""
-        user = await User.get_or_none(id=user_id)
-        return user
+        try:
+            user = await User.get_or_none(id=user_id)
+            if not user:
+                log.debug(f"用户不存在: user_id={user_id}")
+            return user
+        except Exception as e:
+            log.error(f"验证用户时出错: {str(e)}")
+            return None
 
 
 

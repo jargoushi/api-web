@@ -1,13 +1,13 @@
+"""
+路由模块
+按业务领域组织路由：account（账户）、monitor（监控）、system（系统）
+"""
 from fastapi import APIRouter
 
-from app.routers import activation_code_router
-from app.routers import auth_router
-from app.routers import browser_router
-from app.routers import common_router
-from app.routers import index_router
-from app.routers import monitor_router
-from app.routers import task_router
-from app.routers import user_router
+# 导入各模块路由
+from app.routers.account import auth_router, user_router, activation_router
+from app.routers.monitor import monitor_router, task_router, browser_router
+from app.routers.system import common_router
 
 # 创建主 APIRouter，作为所有子路由的入口
 api_router = APIRouter()
@@ -16,32 +16,60 @@ api_router = APIRouter()
 def setup_routers():
     """
     设置并聚合所有子模块路由
-    在这里统一管理所有路由的前缀、标签等信息
+    按业务领域组织：account（账户）、monitor（监控）、system（系统）
     """
 
+    # ==================== 账户模块 ====================
     # 认证相关路由（包含登录等不需要认证的接口）
-    api_router.include_router(auth_router.router, prefix="/auth", tags=["认证管理"])
-
-    # 激活码相关路由（根据业务需求，大部分不需要认证）
-    api_router.include_router(activation_code_router.router, prefix="/activation", tags=["激活码管理"])
-
-    # 系统相关路由（通常不需要认证）
-    api_router.include_router(index_router.router, prefix="/index", tags=["系统"])
-
-    # 公共业务路由（枚举配置、字典数据等，不需要认证）
-    api_router.include_router(common_router.router, prefix="/common", tags=["公共接口"])
+    api_router.include_router(
+        auth_router.router,
+        prefix="/auth",
+        tags=["账户-认证管理"]
+    )
 
     # 用户管理相关路由（需要认证 - 由中间件控制）
-    api_router.include_router(user_router.router, prefix="/users", tags=["用户管理"])
+    api_router.include_router(
+        user_router.router,
+        prefix="/users",
+        tags=["账户-用户管理"]
+    )
 
+    # 激活码相关路由（根据业务需求，大部分不需要认证）
+    api_router.include_router(
+        activation_router.router,
+        prefix="/activation",
+        tags=["账户-激活码管理"]
+    )
+
+    # ==================== 监控模块 ====================
     # 监控中心相关路由（需要认证 - 由中间件控制）
-    api_router.include_router(monitor_router.router, prefix="/monitor", tags=["监控中心"])
+    api_router.include_router(
+        monitor_router.router,
+        prefix="/monitor",
+        tags=["监控-监控中心"]
+    )
 
-    # 监控任务相关路由（独立服务 - 需要认证）
-    api_router.include_router(task_router.router, prefix="/task", tags=["任务管理"])
+    # 监控任务相关路由（需要认证）
+    api_router.include_router(
+        task_router.router,
+        prefix="/task",
+        tags=["监控-任务管理"]
+    )
 
     # 比特浏览器相关路由（需要认证 - 由中间件控制）
-    api_router.include_router(browser_router.router, prefix="/browser", tags=["比特浏览器"])
+    api_router.include_router(
+        browser_router.router,
+        prefix="/browser",
+        tags=["监控-浏览器管理"]
+    )
+
+    # ==================== 系统模块 ====================
+    # 公共业务路由（枚举配置、字典数据等，不需要认证）
+    api_router.include_router(
+        common_router.router,
+        prefix="/common",
+        tags=["系统-公共接口"]
+    )
 
 
 # 执行路由设置

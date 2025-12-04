@@ -9,10 +9,10 @@ from typing import List, Dict, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from app.db.config import init_db, close_db
-from app.models.monitor_config import MonitorConfig
-from app.models.monitor_daily_stats import MonitorDailyStats
+from app.models.monitor.monitor_config import MonitorConfig
+from app.models.monitor.monitor_daily_stats import MonitorDailyStats
 from app.models.monitor_task import MonitorTask
-from app.schemas.monitor import (
+from app.schemas.monitor.monitor import (
     MonitorConfigCreateRequest,
     MonitorConfigUpdateRequest,
     MonitorConfigToggleRequest,
@@ -20,11 +20,11 @@ from app.schemas.monitor import (
     MonitorDailyStatsQueryRequest,
     MonitorTaskQueryRequest
 )
-from app.services.monitor_service import MonitorService
+from app.services.monitor.monitor_service import MonitorService
 from app.services.monitor_task_service import MonitorTaskService
-from app.enums.channel_enum import ChannelEnum
-from app.enums.task_type_enum import TaskTypeEnum
-from app.enums.task_status_enum import TaskStatusEnum
+from app.enums.monitor.channel import ChannelEnum
+from app.enums.monitor.task_type import TaskTypeEnum
+from app.enums.monitor.task_status import TaskStatusEnum
 
 
 class MonitorTester:

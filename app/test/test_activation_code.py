@@ -9,17 +9,17 @@ from typing import List, Dict, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from app.db.config import init_db, close_db
-from app.models.activation_code import ActivationCode
-from app.schemas.activation_code import (
+from app.models.account.activation_code import ActivationCode
+from app.schemas.account.activation import (
     ActivationCodeBatchCreateRequest,
     ActivationCodeCreateItem,
     ActivationCodeGetRequest,
     ActivationCodeInvalidateRequest,
     ActivationCodeQueryRequest
 )
-from app.services.activation_code_service import ActivationCodeService
-from app.enums.activation_code_enum import ActivationTypeEnum
-from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
+from app.services.account.activation_service import ActivationCodeService
+from app.enums.account.activation_type import ActivationTypeEnum
+from app.enums.account.activation_status import ActivationCodeStatusEnum
 
 
 class ActivationCodeTester:
@@ -106,7 +106,7 @@ class ActivationCodeTester:
         try:
             # 分发日卡激活码
             request = ActivationCodeGetRequest(type=ActivationTypeEnum.DAY.code, count=2)
-            distributed_codes = await ActivationCodeService.get_activation_codes(request)
+            distributed_codes = await ActivationCodeService.distribute_activation_codes(request)
 
             # 验证分发结果
             assert len(distributed_codes) == 2, f"期望分发2个激活码，实际分发{len(distributed_codes)}个"
@@ -180,7 +180,7 @@ class ActivationCodeTester:
             if distributed_code is None:
                 # 如果没有已分发的激活码，先分发一个
                 request = ActivationCodeGetRequest(type=ActivationTypeEnum.MONTH.code, count=1)
-                codes = await ActivationCodeService.get_activation_codes(request)
+                codes = await ActivationCodeService.distribute_activation_codes(request)
                 distributed_code = await ActivationCode.get(activation_code=codes[0])
 
             # 执行作废
@@ -267,7 +267,7 @@ class ActivationCodeTester:
                 type=ActivationTypeEnum.PERMANENT.code,
                 count=1
             )
-            distributed_codes = await ActivationCodeService.get_activation_codes(get_request)
+            distributed_codes = await ActivationCodeService.distribute_activation_codes(get_request)
 
             assert test_code in distributed_codes, "分发失败"
 
@@ -315,7 +315,7 @@ class ActivationCodeTester:
         # 测试1: 分发不存在的激活码类型
         try:
             request = ActivationCodeGetRequest(type=999, count=1)
-            await ActivationCodeService.get_activation_codes(request)
+            await ActivationCodeService.distribute_activation_codes(request)
             exception_tests.append({"test": "分发不存在类型", "success": False, "reason": "应该抛出异常但没有"})
         except Exception:
             exception_tests.append({"test": "分发不存在类型", "success": True})

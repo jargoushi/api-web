@@ -1,4 +1,10 @@
 import uvicorn
+import sys
+from pathlib import Path
+
+# 确保从项目根目录运行
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -10,17 +10,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from fastapi.testclient import TestClient
 from app.db.config import init_db, close_db
-from app.models.user import User
-from app.models.user_session import UserSession
-from app.models.activation_code import ActivationCode
-from app.schemas.user import UserRegisterRequest
-from app.schemas.auth import LoginRequest
-from app.schemas.activation_code import ActivationCodeBatchCreateRequest, ActivationCodeCreateItem, ActivationCodeGetRequest
-from app.services.user_service import UserService
-from app.services.activation_code_service import ActivationCodeService
+from app.models.account.user import User
+from app.models.account.user_session import UserSession
+from app.models.account.activation_code import ActivationCode
+from app.schemas.account.user import UserRegisterRequest
+from app.schemas.account.auth import LoginRequest
+from app.schemas.account.activation import ActivationCodeBatchCreateRequest, ActivationCodeCreateItem, ActivationCodeGetRequest
+from app.services.account.user_service import UserService
+from app.services.account.activation_service import ActivationCodeService
 from app.util.jwt import get_jwt_manager
-from app.enums.activation_code_enum import ActivationTypeEnum
-from app.enums.activation_code_status_enum import ActivationCodeStatusEnum
+from app.enums.account.activation_type import ActivationTypeEnum
+from app.enums.account.activation_status import ActivationCodeStatusEnum
 
 
 class AuthModuleTester:

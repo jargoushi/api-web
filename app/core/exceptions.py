@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.schemas.response import error_response
+from app.schemas.common.response import error_response
 
 
 # ---------- 自定义业务异常 ----------
