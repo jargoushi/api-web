@@ -249,17 +249,17 @@ class ActivationCodeService:
 
         return ActivationCodeResponse.model_validate(code, from_attributes=True)
 
-    async def get_activation_code_list(self, params: ActivationCodeQueryRequest) -> List:
+    def get_activation_code_list(self, params: ActivationCodeQueryRequest):
         """
-        获取激活码列表
+        获取激活码查询集（用于分页）
 
         Args:
             params: 查询参数
 
         Returns:
-            激活码列表
+            激活码查询集（QuerySet）
         """
-        return await self.repository.find_with_filters(params)
+        return self.repository.find_with_filters(params)
 
 
 # 创建服务实例

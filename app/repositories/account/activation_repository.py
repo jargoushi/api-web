@@ -114,15 +114,15 @@ class ActivationCodeRepository(BaseRepository[ActivationCode]):
 
         return await self.count(**filters)
 
-    async def find_with_filters(self, params) -> List[ActivationCode]:
+    def find_with_filters(self, params):
         """
-        复杂条件查询激活码
+        复杂条件查询激活码（返回 QuerySet，用于分页）
 
         Args:
             params: 查询参数对象
 
         Returns:
-            激活码列表
+            激活码查询集（QuerySet）
         """
         query = self.model.all()
 
@@ -152,7 +152,7 @@ class ActivationCodeRepository(BaseRepository[ActivationCode]):
 
         query = query.order_by("-created_at")
 
-        return await query.all()
+        return query
 
     async def count_unused_by_type(self, type_code: int) -> int:
         """

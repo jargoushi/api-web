@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     ENABLE_AUTH: bool = True  # 是否启用认证中间件
     TOKEN_REFRESH_THRESHOLD: int = 60  # Token刷新阈值（分钟），剩余时间少于阈值时建议刷新
 
+    # 视频生成配置
+    JIANYING_DRAFT_FOLDER: str = ""  # 剪映草稿文件夹路径，例如：C:/Users/用户名/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft
+    MATERIAL_BASE_PATH: str = "./materials"  # 素材文件基础路径
+
 
 # 创建一个全局设置实例
 settings = Settings()

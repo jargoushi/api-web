@@ -1,31 +1,26 @@
 from datetime import date
 from typing import Optional, List
 
+from app.repositories.base import BaseRepository
 from app.models.monitor.task import Task
 
 
-class TaskRepository:
-    """任务仓储类"""
+class TaskRepository(BaseRepository[Task]):
 
-    def get_queryset(self):
-        """
-        获取基础查询集
+    def __init__(self):
+        """初始化任务仓储"""
+        super().__init__(Task)
 
-        Returns:
-            任务查询集
-        """
-        return Task.all()
-
-    async def find_with_filters(
+    def find_with_filters(
         self,
         channel_code: Optional[int] = None,
         task_type: Optional[int] = None,
         task_status: Optional[int] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None
-    ) -> List[Task]:
+    ):
         """
-        根据条件查询任务列表
+        根据条件查询任务列表（返回 QuerySet，用于分页）
 
         Args:
             channel_code: 渠道编码（可选）
@@ -35,9 +30,9 @@ class TaskRepository:
             end_date: 结束日期（可选）
 
         Returns:
-            任务列表
+            任务查询集（QuerySet）
         """
-        query = self.get_queryset()
+        query = self.model.all()
 
         if channel_code is not None:
             query = query.filter(channel_code=channel_code)

@@ -83,5 +83,5 @@ async def get_paginated_activation_codes(params: ActivationCodeQueryRequest):
     - **expire_time_start**: 过期时间开始（包含）
     - **expire_time_end**: 过期时间结束（包含）
     """
-    codes = await activation_service.get_activation_code_list(params)
-    return await paginated_response(codes, params)
+    query = activation_service.get_activation_code_list(params)
+    return await paginated_response(query, params)

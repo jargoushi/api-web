@@ -19,13 +19,13 @@ class TaskService:
 
     def get_monitor_task_queryset(self, params: MonitorTaskQueryRequest):
         """
-        获取任务查询集
+        获取任务查询集（用于分页）
 
         Args:
             params: 任务查询请求参数
 
         Returns:
-            任务查询集
+            任务查询集（QuerySet）
         """
         return self.repository.find_with_filters(
             channel_code=params.channel_code,
