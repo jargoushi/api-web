@@ -103,5 +103,5 @@ async def get_daily_stats(
     - **start_date**: 开始日期
     - **end_date**: 结束日期
     """
-    result = await service.get_daily_stats(user_id, request)
+    result = await monitor_service.get_daily_stats(user_id, request)
     return success_response(data=result)

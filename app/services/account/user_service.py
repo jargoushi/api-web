@@ -124,20 +124,12 @@ class UserService:
         Returns:
             用户查询集（QuerySet）
         """
-        query = self.user_repository.get_queryset()
-
-        # 动态添加过滤条件
-        if params.username:
-            query = query.filter(username__icontains=params.username)
-        if params.phone:
-            query = query.filter(phone__icontains=params.phone)
-        if params.email:
-            query = query.filter(email__icontains=params.email)
-        if params.activation_code:
-            query = query.filter(activation_code__icontains=params.activation_code)
-
-        # 保持原排序：按创建时间倒序
-        return query.order_by("-created_at")
+        return self.user_repository.find_with_filters(
+            username=params.username,
+            phone=params.phone,
+            email=params.email,
+            activation_code=params.activation_code
+        )
 
     async def check_username_unique(self, username: str) -> bool:
         """

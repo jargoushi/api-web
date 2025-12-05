@@ -132,6 +132,41 @@ class UserRepository(BaseRepository[User]):
             email=email
         )
 
+    def find_with_filters(
+        self,
+        username: Optional[str] = None,
+        phone: Optional[str] = None,
+        email: Optional[str] = None,
+        activation_code: Optional[str] = None
+    ):
+        """
+        根据条件查询用户列表（返回 QuerySet，用于分页）
+
+        Args:
+            username: 用户名（模糊查询）
+            phone: 手机号（模糊查询）
+            email: 邮箱（模糊查询）
+            activation_code: 激活码（模糊查询）
+
+        Returns:
+            用户查询集（QuerySet）
+        """
+        query = self.model.all()
+
+        if username:
+            query = query.filter(username__icontains=username)
+
+        if phone:
+            query = query.filter(phone__icontains=phone)
+
+        if email:
+            query = query.filter(email__icontains=email)
+
+        if activation_code:
+            query = query.filter(activation_code__icontains=activation_code)
+
+        return query.order_by("-created_at")
+
     async def update_user(self, user: User, **update_data) -> User:
         """
         更新用户信息

@@ -87,6 +87,7 @@ CREATE TABLE `monitor_daily_stats` (
 	`content_count` INT UNSIGNED NOT NULL DEFAULT '0' COMMENT '发布内容数量',
 	`extra_data` JSON DEFAULT NULL COMMENT '渠道特有数据 (如B站硬币, 小红书笔记数)',
 	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '数据入库时间',
+	`updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 	PRIMARY KEY ( `id` ) USING BTREE,
 	UNIQUE KEY `uk_config_date` ( `config_id`, `stat_date` ) USING BTREE COMMENT '确保每日每配置只有一条记录',
 	KEY `idx_stat_date` ( `stat_date` ) USING BTREE

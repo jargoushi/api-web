@@ -69,15 +69,7 @@ class MonitorService:
         Returns:
             监控配置查询集（QuerySet）
         """
-        return self.config_repository.find_with_filters(
-            user_id=user_id,
-            account_name=params.account_name,
-            channel_code=params.channel_code,
-            is_active=params.is_active,
-            created_at_start=params.created_at_start,
-            created_at_end=params.created_at_end,
-            include_deleted=False
-        )
+        return self.config_repository.find_with_filters(user_id, params)
 
     async def update_monitor_config(
         self,

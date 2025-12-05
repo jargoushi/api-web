@@ -47,47 +47,36 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
     def find_with_filters(
         self,
         user_id: int,
-        account_name: Optional[str] = None,
-        channel_code: Optional[int] = None,
-        is_active: Optional[int] = None,
-        created_at_start: Optional[datetime] = None,
-        created_at_end: Optional[datetime] = None,
-        include_deleted: bool = False
+        params
     ):
         """
         根据条件查询监控配置列表（返回 QuerySet，用于分页）
 
         Args:
             user_id: 用户 ID
-            account_name: 账号名称（模糊查询）
-            channel_code: 渠道编码
-            is_active: 是否启用
-            created_at_start: 创建时间起始
-            created_at_end: 创建时间结束
-            include_deleted: 是否包含已删除的记录
+            params: 查询参数对象
 
         Returns:
             监控配置查询集（QuerySet）
         """
         query = self.model.filter(user_id=user_id)
 
-        if not include_deleted:
-            query = query.filter(deleted_at__isnull=True)
+        query = query.filter(deleted_at__isnull=True)
 
-        if account_name:
-            query = query.filter(account_name__icontains=account_name)
+        if params.account_name:
+            query = query.filter(account_name__icontains=params.account_name)
 
-        if channel_code is not None:
-            query = query.filter(channel_code=channel_code)
+        if params.channel_code is not None:
+            query = query.filter(channel_code=params.channel_code)
 
-        if is_active is not None:
-            query = query.filter(is_active=is_active)
+        if params.is_active is not None:
+            query = query.filter(is_active=params.is_active)
 
-        if created_at_start:
-            query = query.filter(created_at__gte=created_at_start)
+        if params.created_at_start:
+            query = query.filter(created_at__gte=params.created_at_start)
 
-        if created_at_end:
-            query = query.filter(created_at__lte=created_at_end)
+        if params.created_at_end:
+            query = query.filter(created_at__lte=params.created_at_end)
 
         return query.order_by("-created_at")
 
