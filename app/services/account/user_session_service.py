@@ -1,6 +1,3 @@
-"""
-用户会话服务类
-"""
 from typing import Optional
 
 from app.core.logging import log
@@ -11,14 +8,14 @@ from app.models.account.user_session import UserSession
 class UserSessionService:
     """用户会话服务类"""
 
-    def __init__(self, repository: UserSessionRepository = None):
+    def __init__(self, repository: UserSessionRepository = UserSessionRepository()):
         """
         初始化服务
 
         Args:
             repository: 用户会话仓储实例
         """
-        self.repository = repository or UserSessionRepository()
+        self.repository = repository
 
     async def create_session(
         self,
@@ -169,3 +166,7 @@ class UserSessionService:
         """
         await self.repository.extend_session_time(session, minutes)
         return True
+
+
+# 创建服务实例
+user_session_service = UserSessionService()

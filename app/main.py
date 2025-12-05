@@ -13,7 +13,6 @@ from app.schemas.common.response import success_response
 app = create_app()
 
 
-# 根路径
 @app.get("/")
 async def root():
     """根路径"""

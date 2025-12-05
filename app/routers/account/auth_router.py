@@ -2,15 +2,12 @@ from fastapi import APIRouter, Request, Depends
 
 from app.schemas.account.auth import LoginRequest, ChangePasswordRequest
 from app.schemas.common.response import ApiResponse, success_response
-from app.services.account.auth_service import AuthService
+from app.services.account.auth_service import auth_service
 from app.util.auth_context import (
     get_current_user, get_current_user_id, get_current_session
 )
 
 router = APIRouter()
-
-# 创建 Service 实例
-auth_service = AuthService()
 
 
 @router.post("/login", response_model=ApiResponse[str], summary="用户登录")

@@ -4,7 +4,7 @@ from app.core.exceptions import BusinessException
 from app.core.logging import log
 from app.repositories.account import UserRepository
 from app.schemas.account.user import UserRegisterRequest, UserUpdateRequest, UserResponse, UserQueryRequest
-from app.services.account.activation_service import ActivationCodeService
+from app.services.account.activation_service import activation_service
 from app.util.transaction import transactional
 from app.util.password import hash_password
 
@@ -14,18 +14,17 @@ class UserService:
 
     def __init__(
         self,
-        user_repository: UserRepository = None,
-        activation_service: ActivationCodeService = None
+        user_repository: UserRepository = UserRepository()
     ):
         """
         初始化服务
 
         Args:
             user_repository: 用户仓储实例
-            activation_service: 激活码服务实例
         """
-        self.user_repository = user_repository or UserRepository()
-        self.activation_service = activation_service or ActivationCodeService()
+        self.user_repository = user_repository
+        self.activation_service = activation_service
+
     @transactional
     async def register_user(self, user_data: UserRegisterRequest) -> UserResponse:
         """
@@ -60,7 +59,18 @@ class UserService:
         return UserResponse.model_validate(user_obj, from_attributes=True)
 
     async def get_user_by_id(self, user_id: int) -> UserResponse:
-        """根据ID获取用户"""
+        """
+        根据ID获取用户
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            用户响应
+
+        Raises:
+            BusinessException: 用户不存在
+        """
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise BusinessException(message="用户不存在", code=404)
@@ -68,7 +78,19 @@ class UserService:
         return UserResponse.model_validate(user, from_attributes=True)
 
     async def update_user(self, user_id: int, user_data: UserUpdateRequest) -> UserResponse:
-        """更新用户信息"""
+        """
+        更新用户信息
+
+        Args:
+            user_id: 用户ID
+            user_data: 用户更新请求
+
+        Returns:
+            用户响应
+
+        Raises:
+            BusinessException: 用户不存在或字段冲突
+        """
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise BusinessException(message="用户不存在", code=404)
@@ -93,7 +115,15 @@ class UserService:
         return UserResponse.model_validate(user, from_attributes=True)
 
     async def get_user_list(self, params: UserQueryRequest) -> List:
-        """获取用户列表（支持条件过滤）"""
+        """
+        获取用户列表（支持条件过滤）
+
+        Args:
+            params: 用户查询请求
+
+        Returns:
+            用户列表
+        """
         query = self.user_repository.get_queryset()
 
         # 动态添加过滤条件
@@ -163,3 +193,7 @@ class UserService:
 
         return await query.exists()
 
+
+
+# 创建服务实例
+user_service = UserService()

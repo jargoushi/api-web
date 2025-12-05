@@ -93,19 +93,20 @@ CREATE TABLE `monitor_daily_stats` (
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '监控每日数据明细表';
 
 CREATE TABLE `tasks` (
-	`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '任务ID',-- 核心分类信息
+	`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '任务ID',
 	`channel_code` INT UNSIGNED NOT NULL COMMENT '渠道编码 (ChannelEnum)',
 	`task_type` INT UNSIGNED NOT NULL COMMENT '任务类型 (TaskTypeEnum)',
-	`biz_id` BIGINT UNSIGNED NOT NULL COMMENT '业务ID (关联 monitor_configs.id)',-- 调度与状态
+	`biz_id` BIGINT UNSIGNED NOT NULL COMMENT '业务ID (关联 monitor_configs.id)',
 	`task_status` TINYINT UNSIGNED NOT NULL DEFAULT '0' COMMENT '状态 1:进行中 2:成功 3:失败',
 	`schedule_date` DATE NOT NULL COMMENT '调度日期 (标识这是哪一天的任务)',
 	`error_msg` TEXT COLLATE utf8mb4_general_ci COMMENT '异常信息栈',
-	`duration_ms` INT UNSIGNED DEFAULT '0' COMMENT '耗时(ms)',-- 时间记录
+	`duration_ms` INT UNSIGNED DEFAULT '0' COMMENT '耗时(ms)',
 	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '任务创建时间',
+	`updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 	`started_at` DATETIME DEFAULT NULL COMMENT '开始执行时间',
 	`finished_at` DATETIME DEFAULT NULL COMMENT '结束执行时间',
 	PRIMARY KEY ( `id` ) USING BTREE,
 	KEY `idx_biz_id` ( `biz_id` ) USING BTREE,
 	KEY `idx_schedule` ( `schedule_date`, `task_type`, `task_status` ) USING BTREE COMMENT '查询某天某类任务执行情况',
-KEY `idx_created` ( `created_at` ) USING BTREE
+	KEY `idx_created` ( `created_at` ) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '任务表';

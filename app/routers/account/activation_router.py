@@ -7,12 +7,9 @@ from app.schemas.account.activation import (
 )
 from app.schemas.common.pagination import PageResponse
 from app.schemas.common.response import ApiResponse, success_response, paginated_response
-from app.services.account.activation_service import ActivationCodeService
+from app.services.account.activation_service import activation_service
 
 router = APIRouter()
-
-# 创建 Service 实例
-activation_service = ActivationCodeService()
 
 
 @router.post("/init", response_model=ApiResponse[ActivationCodeBatchResponse], summary="初始化激活码数据")

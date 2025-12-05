@@ -1,28 +1,40 @@
-from app.models.monitor.task import Task
+from app.repositories.monitor import TaskRepository
 from app.schemas.monitor.task import MonitorTaskQueryRequest
 
 
 class TaskService:
-    """任务服务（独立服务）"""
+    """任务服务类"""
 
-    @staticmethod
-    def get_monitor_task_queryset(params: MonitorTaskQueryRequest):
-        """获取任务查询集"""
-        query = Task.all()
+    def __init__(
+        self,
+        repository: TaskRepository = TaskRepository()
+    ):
+        """
+        初始化服务
 
-        if params.channel_code is not None:
-            query = query.filter(channel_code=params.channel_code)
+        Args:
+            repository: 任务仓储实例
+        """
+        self.repository = repository
 
-        if params.task_type is not None:
-            query = query.filter(task_type=params.task_type)
+    def get_monitor_task_queryset(self, params: MonitorTaskQueryRequest):
+        """
+        获取任务查询集
 
-        if params.task_status is not None:
-            query = query.filter(task_status=params.task_status)
+        Args:
+            params: 任务查询请求参数
 
-        if params.start_date:
-            query = query.filter(schedule_date__gte=params.start_date)
+        Returns:
+            任务查询集
+        """
+        return self.repository.find_with_filters(
+            channel_code=params.channel_code,
+            task_type=params.task_type,
+            task_status=params.task_status,
+            start_date=params.start_date,
+            end_date=params.end_date
+        )
 
-        if params.end_date:
-            query = query.filter(schedule_date__lte=params.end_date)
 
-        return query.order_by("-created_at")
+# 创建服务实例
+task_service = TaskService()

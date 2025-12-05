@@ -4,7 +4,7 @@ from app.core.exceptions import BusinessException
 from app.core.logging import log
 from app.models.account.user import User
 from app.repositories.account import UserRepository, ActivationCodeRepository
-from app.services.account.user_session_service import UserSessionService
+from app.services.account.user_session_service import user_session_service
 from app.util.device import get_client_ip, generate_device_name
 from app.util.jwt import create_user_token, blacklist_user_token, get_jwt_manager
 from app.util.password import verify_password, hash_password
@@ -15,21 +15,19 @@ class AuthService:
 
     def __init__(
         self,
-        user_repository: UserRepository = None,
-        session_service: UserSessionService = None,
-        activation_repository: ActivationCodeRepository = None
+        user_repository: UserRepository = UserRepository(),
+        activation_repository: ActivationCodeRepository = ActivationCodeRepository()
     ):
         """
         初始化服务
 
         Args:
             user_repository: 用户仓储实例
-            session_service: 会话服务实例
             activation_repository: 激活码仓储实例
         """
-        self.user_repository = user_repository or UserRepository()
-        self.session_service = session_service or UserSessionService()
-        self.activation_repository = activation_repository or ActivationCodeRepository()
+        self.user_repository = user_repository
+        self.session_service = user_session_service
+        self.activation_repository = activation_repository
 
     async def authenticate_user(self, username: str, password: str) -> User:
         """
@@ -136,7 +134,13 @@ class AuthService:
     async def change_password(self, user: User, new_password: str) -> bool:
         """
         修改用户密码
-        密码复杂度验证已在schema中完成
+
+        Args:
+            user: 用户实例
+            new_password: 新密码（密码复杂度验证已在schema中完成）
+
+        Returns:
+            是否修改成功
         """
         # 1. 更新密码（schema已验证复杂度）
         user.password = hash_password(new_password)
@@ -147,3 +151,7 @@ class AuthService:
 
         log.info(f"用户 {user.username} 修改密码成功")
         return True
+
+
+# 创建服务实例
+auth_service = AuthService()

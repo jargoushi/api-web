@@ -20,8 +20,8 @@ class MonitorService:
 
     def __init__(
         self,
-        config_repository: MonitorConfigRepository = None,
-        stats_repository: MonitorDailyStatsRepository = None
+        config_repository: MonitorConfigRepository = MonitorConfigRepository(),
+        stats_repository: MonitorDailyStatsRepository = MonitorDailyStatsRepository()
     ):
         """
         初始化服务
@@ -30,8 +30,8 @@ class MonitorService:
             config_repository: 监控配置仓储实例
             stats_repository: 监控每日数据仓储实例
         """
-        self.config_repository = config_repository or MonitorConfigRepository()
-        self.stats_repository = stats_repository or MonitorDailyStatsRepository()
+        self.config_repository = config_repository
+        self.stats_repository = stats_repository
 
     async def create_monitor_config(self, user_id: int, request: MonitorConfigCreateRequest) -> MonitorConfigResponse:
         """
@@ -209,3 +209,7 @@ class MonitorService:
         )
 
         return [MonitorDailyStatsResponse.model_validate(stat, from_attributes=True) for stat in stats]
+
+
+# 创建服务实例
+monitor_service = MonitorService()

@@ -24,18 +24,18 @@ class ActivationCodeService:
 
     def __init__(
         self,
-        repository: ActivationCodeRepository = None,
-        code_generator: ActivationCodeGenerator = None
+        repository: ActivationCodeRepository = ActivationCodeRepository(),
+        code_generator: ActivationCodeGenerator = ActivationCodeGenerator()
     ):
         """
         初始化服务
 
         Args:
-            repository: 激活码仓储实例，用于依赖注入（测试时可传入 Mock）
+            repository: 激活码仓储实例
             code_generator: 激活码生成器实例
         """
-        self.repository = repository or ActivationCodeRepository()
-        self.code_generator = code_generator or ActivationCodeGenerator()
+        self.repository = repository
+        self.code_generator = code_generator
 
     async def _generate_unique_code(self) -> str:
         """
@@ -260,3 +260,7 @@ class ActivationCodeService:
             激活码列表
         """
         return await self.repository.find_with_filters(params)
+
+
+# 创建服务实例
+activation_service = ActivationCodeService()

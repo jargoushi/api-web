@@ -59,11 +59,27 @@ class BitBrowserService:
             raise BusinessException(message="比特浏览器服务异常", code=500)
 
     async def health_check(self) -> None:
-        """健康检查"""
+        """
+        健康检查
+
+        Raises:
+            BusinessException: 服务不可用
+        """
         await self._make_request("/health")
 
     async def open_browser(self, request: BrowserOpenRequest) -> BrowserBatchOpenResponse:
-        """批量打开浏览器窗口"""
+        """
+        批量打开浏览器窗口
+
+        Args:
+            request: 浏览器打开请求
+
+        Returns:
+            批量打开响应
+
+        Raises:
+            BusinessException: 窗口ID列表为空
+        """
         if not request.ids or len(request.ids) == 0:
             raise BusinessException(message="必须提供窗口ID列表", code=400)
 
@@ -117,23 +133,61 @@ class BitBrowserService:
         )
 
     async def close_browser(self, browser_id: str) -> None:
-        """关闭浏览器窗口"""
+        """
+        关闭浏览器窗口
+
+        Args:
+            browser_id: 浏览器窗口ID
+
+        Raises:
+            BusinessException: 操作失败
+        """
         data = {"id": browser_id}
         await self._make_request("/browser/close", data)
 
     async def delete_browser(self, browser_id: str) -> None:
-        """删除浏览器窗口"""
+        """
+        删除浏览器窗口
+
+        Args:
+            browser_id: 浏览器窗口ID
+
+        Raises:
+            BusinessException: 操作失败
+        """
         data = {"id": browser_id}
         await self._make_request("/browser/delete", data)
 
     async def get_browser_detail(self, browser_id: str) -> BrowserDetailResponse:
-        """获取浏览器窗口详情"""
+        """
+        获取浏览器窗口详情
+
+        Args:
+            browser_id: 浏览器窗口ID
+
+        Returns:
+            浏览器详情响应
+
+        Raises:
+            BusinessException: 操作失败
+        """
         data = {"id": browser_id}
         result = await self._make_request("/browser/detail", data)
         return BrowserDetailResponse(**result)
 
     async def get_browser_list(self, params: BrowserListRequest) -> BrowserListResponse:
-        """分页获取浏览器窗口列表"""
+        """
+        分页获取浏览器窗口列表
+
+        Args:
+            params: 浏览器列表查询请求
+
+        Returns:
+            浏览器列表响应
+
+        Raises:
+            BusinessException: 操作失败
+        """
         # 转换页码（从1开始转换为从0开始）
         page_data = params.model_dump(exclude_unset=True)
         page_data["page"] = params.page - 1  # 比特浏览器API页码从0开始
@@ -150,12 +204,25 @@ class BitBrowserService:
         )
 
     async def arrange_windows(self, seqlist: Optional[List[int]] = None) -> None:
-        """一键自适应排列窗口"""
+        """
+        一键自适应排列窗口
+
+        Args:
+            seqlist: 窗口序列列表（可选）
+
+        Raises:
+            BusinessException: 操作失败
+        """
         data = {"seqlist": seqlist or []}
         await self._make_request("/windowbounds/flexable", data)
 
     async def close_all_browsers(self) -> None:
-        """关闭所有浏览器窗口"""
+        """
+        关闭所有浏览器窗口
+
+        Raises:
+            BusinessException: 操作失败
+        """
         await self._make_request("/browser/close/all")
 
 

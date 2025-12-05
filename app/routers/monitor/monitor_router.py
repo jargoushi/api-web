@@ -11,7 +11,7 @@ from app.schemas.monitor.monitor import (
 )
 from app.schemas.common.pagination import PageResponse
 from app.schemas.common.response import ApiResponse, success_response
-from app.services.monitor.monitor_service import MonitorService
+from app.services.monitor.monitor_service import monitor_service
 
 router = APIRouter()
 
@@ -22,16 +22,10 @@ async def get_current_user_id() -> int:
     return 1
 
 
-def get_monitor_service() -> MonitorService:
-    """获取监控服务实例"""
-    return MonitorService()
-
-
 @router.post("/config", response_model=ApiResponse[MonitorConfigResponse], summary="创建监控配置")
 async def create_monitor_config(
     request: MonitorConfigCreateRequest,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     创建监控配置
@@ -39,20 +33,19 @@ async def create_monitor_config(
     - **channel_code**: 渠道编码（1:小红书 2:哔哩哔哩 3:YouTube 4:微信公众号 5:微信视频号）
     - **target_url**: 监控目标链接
     """
-    result = await service.create_monitor_config(user_id, request)
+    result = await monitor_service.create_monitor_config(user_id, request)
     return success_response(data=result)
 
 
 @router.post("/config/pageList", response_model=ApiResponse[list[MonitorConfigResponse]], summary="查询监控列表")
 async def get_monitor_config_list(
     params: MonitorConfigQueryRequest,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     查询监控配置列表
     """
-    result = await service.get_monitor_config_list(user_id, params)
+    result = await monitor_service.get_monitor_config_list(user_id, params)
     return success_response(data=result)
 
 
@@ -60,15 +53,14 @@ async def get_monitor_config_list(
 async def update_monitor_config(
     config_id: int,
     request: MonitorConfigUpdateRequest,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     修改监控配置
 
     - **target_url**: 新的监控目标链接
     """
-    result = await service.update_monitor_config(user_id, config_id, request)
+    result = await monitor_service.update_monitor_config(user_id, config_id, request)
     return success_response(data=result)
 
 
@@ -76,36 +68,33 @@ async def update_monitor_config(
 async def toggle_monitor_config(
     config_id: int,
     request: MonitorConfigToggleRequest,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     切换监控启用/禁用状态
 
     - **is_active**: 是否启用（0:否 1:是）
     """
-    result = await service.toggle_monitor_config(user_id, config_id, request)
+    result = await monitor_service.toggle_monitor_config(user_id, config_id, request)
     return success_response(data=result)
 
 
 @router.delete("/config/{config_id}", response_model=ApiResponse[bool], summary="删除监控配置")
 async def delete_monitor_config(
     config_id: int,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     删除监控配置（软删除）
     """
-    result = await service.delete_monitor_config(user_id, config_id)
+    result = await monitor_service.delete_monitor_config(user_id, config_id)
     return success_response(data=result)
 
 
 @router.post("/stats/daily", response_model=ApiResponse[list[MonitorDailyStatsResponse]], summary="查询每日明细数据")
 async def get_daily_stats(
     request: MonitorDailyStatsQueryRequest,
-    user_id: int = Depends(get_current_user_id),
-    service: MonitorService = Depends(get_monitor_service)
+    user_id: int = Depends(get_current_user_id)
 ):
     """
     查询指定配置的每日明细数据（用于图表展示）
@@ -114,5 +103,5 @@ async def get_daily_stats(
     - **start_date**: 开始日期
     - **end_date**: 结束日期
     """
-    result = await service.get_daily_stats(user_id, request)
+    result = await monitor_service.get_daily_stats(user_id, request)
     return success_response(data=result)

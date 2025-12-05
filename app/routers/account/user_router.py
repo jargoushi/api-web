@@ -3,13 +3,10 @@ from fastapi import APIRouter, Depends
 from app.schemas.common.pagination import PageResponse
 from app.schemas.common.response import ApiResponse, success_response, paginated_response
 from app.schemas.account.user import UserResponse, UserRegisterRequest, UserUpdateRequest, UserQueryRequest
-from app.services.account.user_service import UserService
+from app.services.account.user_service import user_service
 from app.util.auth_context import get_current_user_id
 
 router = APIRouter()
-
-# 创建 Service 实例
-user_service = UserService()
 
 
 @router.post("/register", response_model=ApiResponse[UserResponse], summary="用户注册")
