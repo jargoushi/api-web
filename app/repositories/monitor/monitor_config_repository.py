@@ -44,7 +44,7 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
 
         return await self.get_or_none(**filters)
 
-    async def find_user_configs(
+    def find_with_filters(
         self,
         user_id: int,
         account_name: Optional[str] = None,
@@ -53,9 +53,9 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
         created_at_start: Optional[datetime] = None,
         created_at_end: Optional[datetime] = None,
         include_deleted: bool = False
-    ) -> List[MonitorConfig]:
+    ):
         """
-        查询用户的监控配置列表
+        根据条件查询监控配置列表（返回 QuerySet，用于分页）
 
         Args:
             user_id: 用户 ID
@@ -67,7 +67,7 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
             include_deleted: 是否包含已删除的记录
 
         Returns:
-            监控配置列表
+            监控配置查询集（QuerySet）
         """
         query = self.model.filter(user_id=user_id)
 
@@ -89,7 +89,7 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
         if created_at_end:
             query = query.filter(created_at__lte=created_at_end)
 
-        return await query.order_by("-created_at").all()
+        return query.order_by("-created_at")
 
     async def create_monitor_config(
         self,

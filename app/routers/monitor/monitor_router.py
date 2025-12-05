@@ -10,7 +10,7 @@ from app.schemas.monitor.monitor import (
     MonitorDailyStatsResponse
 )
 from app.schemas.common.pagination import PageResponse
-from app.schemas.common.response import ApiResponse, success_response
+from app.schemas.common.response import ApiResponse, success_response, paginated_response
 from app.services.monitor.monitor_service import monitor_service
 
 router = APIRouter()
@@ -37,16 +37,16 @@ async def create_monitor_config(
     return success_response(data=result)
 
 
-@router.post("/config/pageList", response_model=ApiResponse[list[MonitorConfigResponse]], summary="查询监控列表")
+@router.post("/config/pageList", response_model=ApiResponse[PageResponse[MonitorConfigResponse]], summary="分页查询监控列表")
 async def get_monitor_config_list(
     params: MonitorConfigQueryRequest,
     user_id: int = Depends(get_current_user_id)
 ):
     """
-    查询监控配置列表
+    分页查询监控配置列表（支持多维度筛选）
     """
-    result = await monitor_service.get_monitor_config_list(user_id, params)
-    return success_response(data=result)
+    query = monitor_service.get_monitor_config_queryset(user_id, params)
+    return await paginated_response(query, params)
 
 
 @router.put("/config/{config_id}", response_model=ApiResponse[MonitorConfigResponse], summary="修改监控配置")
@@ -103,5 +103,5 @@ async def get_daily_stats(
     - **start_date**: 开始日期
     - **end_date**: 结束日期
     """
-    result = await monitor_service.get_daily_stats(user_id, request)
+    result = await service.get_daily_stats(user_id, request)
     return success_response(data=result)

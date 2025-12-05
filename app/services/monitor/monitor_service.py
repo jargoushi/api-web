@@ -58,18 +58,18 @@ class MonitorService:
         log.info(f"监控配置创建成功，ID：{config.id}")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
-    async def get_monitor_config_list(self, user_id: int, params: MonitorConfigQueryRequest) -> List[MonitorConfigResponse]:
+    def get_monitor_config_queryset(self, user_id: int, params: MonitorConfigQueryRequest):
         """
-        获取监控配置列表
+        获取监控配置查询集（用于分页）
 
         Args:
             user_id: 用户 ID
             params: 查询参数
 
         Returns:
-            监控配置列表
+            监控配置查询集（QuerySet）
         """
-        configs = await self.config_repository.find_user_configs(
+        return self.config_repository.find_with_filters(
             user_id=user_id,
             account_name=params.account_name,
             channel_code=params.channel_code,
@@ -78,8 +78,6 @@ class MonitorService:
             created_at_end=params.created_at_end,
             include_deleted=False
         )
-
-        return [MonitorConfigResponse.model_validate(config, from_attributes=True) for config in configs]
 
     async def update_monitor_config(
         self,

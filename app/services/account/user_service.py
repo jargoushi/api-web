@@ -114,15 +114,15 @@ class UserService:
 
         return UserResponse.model_validate(user, from_attributes=True)
 
-    async def get_user_list(self, params: UserQueryRequest) -> List:
+    def get_user_list(self, params: UserQueryRequest):
         """
-        获取用户列表（支持条件过滤）
+        获取用户查询集（用于分页）
 
         Args:
             params: 用户查询请求
 
         Returns:
-            用户列表
+            用户查询集（QuerySet）
         """
         query = self.user_repository.get_queryset()
 
@@ -137,7 +137,7 @@ class UserService:
             query = query.filter(activation_code__icontains=params.activation_code)
 
         # 保持原排序：按创建时间倒序
-        return await query.order_by("-created_at").all()
+        return query.order_by("-created_at")
 
     async def check_username_unique(self, username: str) -> bool:
         """

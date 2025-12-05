@@ -45,7 +45,7 @@ async def update_user(user_data: UserUpdateRequest, user_id: int = Depends(get_c
 
 
 @router.post("/pageList", response_model=ApiResponse[PageResponse[UserResponse]], summary="分页获取用户列表")
-async def get_paginated_users(params: UserQueryRequest = Depends()):
+async def get_paginated_users(params: UserQueryRequest):
     """
     获取用户列表（分页+条件查询）
     - **page**: 页码，从1开始，默认为1
@@ -55,6 +55,5 @@ async def get_paginated_users(params: UserQueryRequest = Depends()):
     - **email**: 邮箱模糊匹配（可选）
     - **activation_code**: 激活码模糊匹配（可选）
     """
-
-    users = await user_service.get_user_list(params)
-    return await paginated_response(users, params)
+    query = user_service.get_user_list(params)
+    return await paginated_response(query, params)
