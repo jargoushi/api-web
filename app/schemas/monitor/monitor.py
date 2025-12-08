@@ -17,11 +17,13 @@ class MonitorConfigCreateRequest(BaseRequestModel):
 
 class MonitorConfigUpdateRequest(BaseRequestModel):
     """修改监控配置请求"""
+    id: int = Field(..., description="配置ID")
     target_url: str = Field(..., min_length=1, max_length=512, description="监控目标链接")
 
 
 class MonitorConfigToggleRequest(BaseRequestModel):
     """切换监控状态请求"""
+    id: int = Field(..., description="配置ID")
     is_active: int = Field(..., ge=0, le=1, description="是否启用 0:否 1:是")
 
 

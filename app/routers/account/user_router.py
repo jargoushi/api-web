@@ -48,12 +48,6 @@ async def update_user(user_data: UserUpdateRequest, user_id: int = Depends(get_c
 async def get_paginated_users(params: UserQueryRequest):
     """
     获取用户列表（分页+条件查询）
-    - **page**: 页码，从1开始，默认为1
-    - **size**: 每页数量，默认为10，最大100
-    - **username**: 用户名模糊匹配（可选）
-    - **phone**: 手机号模糊匹配（可选）
-    - **email**: 邮箱模糊匹配（可选）
-    - **activation_code**: 激活码模糊匹配（可选）
     """
     query = user_service.get_user_list(params)
     return await paginated_response(query, params)

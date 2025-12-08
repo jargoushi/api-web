@@ -49,45 +49,47 @@ async def get_monitor_config_list(
     return await paginated_response(query, params)
 
 
-@router.put("/config/{config_id}", response_model=ApiResponse[MonitorConfigResponse], summary="修改监控配置")
+@router.post("/config/update", response_model=ApiResponse[MonitorConfigResponse], summary="修改监控配置")
 async def update_monitor_config(
-    config_id: int,
     request: MonitorConfigUpdateRequest,
     user_id: int = Depends(get_current_user_id)
 ):
     """
     修改监控配置
 
+    - **config_id**: 配置ID
     - **target_url**: 新的监控目标链接
     """
-    result = await monitor_service.update_monitor_config(user_id, config_id, request)
+    result = await monitor_service.update_monitor_config(user_id, request)
     return success_response(data=result)
 
 
-@router.patch("/config/{config_id}/toggle", response_model=ApiResponse[MonitorConfigResponse], summary="切换监控状态")
+@router.post("/config/toggle", response_model=ApiResponse[MonitorConfigResponse], summary="切换监控状态")
 async def toggle_monitor_config(
-    config_id: int,
     request: MonitorConfigToggleRequest,
     user_id: int = Depends(get_current_user_id)
 ):
     """
     切换监控启用/禁用状态
 
+    - **config_id**: 配置ID
     - **is_active**: 是否启用（0:否 1:是）
     """
-    result = await monitor_service.toggle_monitor_config(user_id, config_id, request)
+    result = await monitor_service.toggle_monitor_config(user_id, request)
     return success_response(data=result)
 
 
-@router.delete("/config/{config_id}", response_model=ApiResponse[bool], summary="删除监控配置")
+@router.post("/config/delete", response_model=ApiResponse[bool], summary="删除监控配置")
 async def delete_monitor_config(
-    config_id: int,
+    id: int,
     user_id: int = Depends(get_current_user_id)
 ):
     """
     删除监控配置（软删除）
+
+    - **config_id**: 配置ID
     """
-    result = await monitor_service.delete_monitor_config(user_id, config_id)
+    result = await monitor_service.delete_monitor_config(user_id, id)
     return success_response(data=result)
 
 

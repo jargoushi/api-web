@@ -74,16 +74,6 @@ async def get_browser_detail(request: BrowserDetailRequest):
 async def get_browser_list(params: BrowserListRequest = Depends()):
     """
     获取浏览器窗口列表（分页+条件查询）
-
-    - **page**: 页码，从1开始，默认为1
-    - **size**: 每页数量，默认为10，最大100
-    - **groupId**: 分组ID（可选）
-    - **name**: 窗口名称模糊匹配（可选）
-    - **remark**: 备注精确查询（可选）
-    - **seq**: 窗口序号精确查询（可选）
-    - **minSeq**: 最小序号范围查询（可选）
-    - **maxSeq**: 最大序号范围查询（可选）
-    - **sort**: 排序方式 desc/asc（可选）
     """
     result = await bit_browser_service.get_browser_list(params)
 

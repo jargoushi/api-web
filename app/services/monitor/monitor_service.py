@@ -74,7 +74,6 @@ class MonitorService:
     async def update_monitor_config(
         self,
         user_id: int,
-        config_id: int,
         request: MonitorConfigUpdateRequest
     ) -> MonitorConfigResponse:
         """
@@ -91,10 +90,10 @@ class MonitorService:
         Raises:
             BusinessException: 监控配置不存在
         """
-        log.info(f"用户{user_id}修改监控配置{config_id}，新链接：{request.target_url}")
+        log.info(f"用户{user_id}修改监控配置{request.id}，新链接：{request.target_url}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(config_id, user_id)
+        config = await self.config_repository.find_by_id(request.id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
@@ -105,13 +104,12 @@ class MonitorService:
             target_url=request.target_url if request.target_url else None
         )
 
-        log.info(f"监控配置{config_id}修改成功")
+        log.info(f"监控配置{request.id}修改成功")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
     async def toggle_monitor_config(
         self,
         user_id: int,
-        config_id: int,
         request: MonitorConfigToggleRequest
     ) -> MonitorConfigResponse:
         """
@@ -128,19 +126,19 @@ class MonitorService:
         Raises:
             BusinessException: 监控配置不存在
         """
-        log.info(f"用户{user_id}切换监控配置{config_id}状态为：{request.is_active}")
+        log.info(f"用户{user_id}切换监控配置{request.id}状态为：{request.is_active}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(config_id, user_id)
+        config = await self.config_repository.find_by_id(request.id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
         config = await self.config_repository.toggle_monitor_status(config, request.is_active)
 
-        log.info(f"监控配置{config_id}状态切换成功")
+        log.info(f"监控配置{request.id}状态切换成功")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
 
-    async def delete_monitor_config(self, user_id: int, config_id: int) -> bool:
+    async def delete_monitor_config(self, user_id: int, id: int) -> bool:
         """
         删除监控配置（软删除）
 
@@ -154,16 +152,16 @@ class MonitorService:
         Raises:
             BusinessException: 监控配置不存在
         """
-        log.info(f"用户{user_id}删除监控配置{config_id}")
+        log.info(f"用户{user_id}删除监控配置{id}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(config_id, user_id)
+        config = await self.config_repository.find_by_id(id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
         await self.config_repository.soft_delete_config(config)
 
-        log.info(f"监控配置{config_id}删除成功")
+        log.info(f"监控配置{id}删除成功")
         return True
 
     async def get_daily_stats(

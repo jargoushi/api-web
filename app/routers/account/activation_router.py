@@ -71,17 +71,6 @@ async def get_activation_code_detail(activation_code: str):
 async def get_paginated_activation_codes(params: ActivationCodeQueryRequest):
     """
     获取激活码列表（分页+条件查询）
-    - **page**: 页码，从1开始，默认为1
-    - **size**: 每页数量，默认为10，最大100
-    - **type**: 激活码类型（0：日卡 1：月卡 2：年卡 3：永久卡）
-    - **activation_code**: 激活码（精准匹配）
-    - **status**: 激活码状态（0：未使用 1：已分发 2：已激活 3：作废）
-    - **distributed_at_start**: 分发时间开始（包含）
-    - **distributed_at_end**: 分发时间结束（包含）
-    - **activated_at_start**: 激活时间开始（包含）
-    - **activated_at_end**: 激活时间结束（包含）
-    - **expire_time_start**: 过期时间开始（包含）
-    - **expire_time_end**: 过期时间结束（包含）
     """
     query = activation_service.get_activation_code_list(params)
     return await paginated_response(query, params)
