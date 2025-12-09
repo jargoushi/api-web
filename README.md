@@ -2,6 +2,25 @@
 
 基于 FastAPI 和 TortoiseORM 构建的 Web API 项目，使用 MySQL 作为数据库。
 
+## 🆕 新功能：地理视频生成系统
+
+基于 GeoJSON 地图数据和方言音频，自动生成带运镜效果的地理信息视频。
+
+**快速开始:**
+
+```bash
+# 安装依赖
+uv sync
+
+# 快速启动
+python quick_start.py
+
+# 或运行测试
+python test_geo_video.py
+```
+
+**详细文档:** 查看 [GEO_VIDEO_GUIDE.md](GEO_VIDEO_GUIDE.md)
+
 ## 技术栈
 
 - **FastAPI** - 现代、高性能的 Web 框架
