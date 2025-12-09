@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 
 from fastapi import Request, HTTPException
 
-from app.core.config import get_settings
+from app.core.config import settings
 
 
 def _normalize_user_agent(user_agent):
@@ -25,8 +25,7 @@ class JWTManager:
     """Token管理器 - 使用简洁格式token"""
 
     def __init__(self):
-        self.settings = get_settings()
-        self.expire_minutes = self.settings.JWT_EXPIRE_MINUTES
+        self.expire_minutes = settings.JWT_EXPIRE_MINUTES
         self._tokens: dict[str, dict] = {}  # Token存储（生产环境建议使用Redis）
 
     @staticmethod

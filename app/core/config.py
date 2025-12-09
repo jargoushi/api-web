@@ -53,8 +53,3 @@ class Settings(BaseSettings):
 
 # 创建一个全局设置实例
 settings = Settings()
-
-
-def get_settings() -> Settings:
-    """获取设置实例的便捷函数"""
-    return settings
