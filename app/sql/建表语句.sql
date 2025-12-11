@@ -111,3 +111,16 @@ CREATE TABLE `tasks` (
 	KEY `idx_schedule` ( `schedule_date`, `task_type`, `task_status` ) USING BTREE COMMENT '查询某天某类任务执行情况',
 	KEY `idx_created` ( `created_at` ) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '任务表';
+
+-- 用户配置表
+CREATE TABLE `user_settings` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    `setting_key` INT UNSIGNED NOT NULL COMMENT '配置项编码 (对应 SettingKeyEnum)',
+    `setting_value` JSON NOT NULL COMMENT '配置值',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_user_key` (`user_id`, `setting_key`) USING BTREE COMMENT '每用户每配置项唯一',
+    KEY `idx_user_id` (`user_id`) USING BTREE
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '用户配置表';

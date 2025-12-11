@@ -35,7 +35,7 @@ async def get_setting(setting_key: int, user_id: int = Depends(get_current_user_
     return success_response(data=result)
 
 
-@router.put("/", response_model=ApiResponse[SettingResponse], summary="更新配置")
+@router.post("/update", response_model=ApiResponse[SettingResponse], summary="更新配置")
 async def update_setting(
     request: SettingUpdateRequest,
     user_id: int = Depends(get_current_user_id)
