@@ -10,6 +10,7 @@ from .base import BaseModel
 from .account.user import User
 from .account.user_session import UserSession
 from .account.activation_code import ActivationCode
+from .account.user_setting import UserSetting
 
 # 导入 monitor 模块的所有 Model
 from .monitor.monitor_config import MonitorConfig
@@ -23,6 +24,7 @@ __all__ = [
     "User",
     "UserSession",
     "ActivationCode",
+    "UserSetting",
     # monitor 模块
     "MonitorConfig",
     "MonitorDailyStats",
