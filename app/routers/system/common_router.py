@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter
 
-from app.enums.monitor.channel import ChannelEnum
+from app.enums.common.channel import ChannelEnum
 from app.schemas.common.common import ChannelResponse
 from app.schemas.common.response import ApiResponse, success_response
 

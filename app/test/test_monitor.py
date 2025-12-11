@@ -22,7 +22,7 @@ from app.schemas.monitor.monitor import (
 )
 from app.services.monitor.monitor_service import MonitorService
 from app.services.monitor_task_service import MonitorTaskService
-from app.enums.monitor.channel import ChannelEnum
+from app.enums.common.channel import ChannelEnum
 from app.enums.monitor.task_type import TaskTypeEnum
 from app.enums.monitor.task_status import TaskStatusEnum
 
@@ -74,18 +74,18 @@ class MonitorTester:
         print("\n测试1: 创建监控配置")
 
         try:
-            # 创建小红书监控配置
+            # 创建抖音监控配置
             request = MonitorConfigCreateRequest(
-                channel_code=ChannelEnum.XIAOHONGSHU.code,
-                target_url="https://www.xiaohongshu.com/user/profile/test123"
+                channel_code=ChannelEnum.DOUYIN.code,
+                target_url="https://www.douyin.com/user/test123"
             )
 
             result = await MonitorService.create_monitor_config(self.test_user_id, request)
 
             # 验证结果
             assert result.user_id == self.test_user_id, "用户ID不匹配"
-            assert result.channel_code == ChannelEnum.XIAOHONGSHU.code, "渠道编码不匹配"
-            assert result.channel_name == "小红书", "渠道名称不匹配"
+            assert result.channel_code == ChannelEnum.DOUYIN.code, "渠道编码不匹配"
+            assert result.channel_name == "抖音", "渠道名称不匹配"
             assert result.target_url == request.target_url, "目标链接不匹配"
             assert result.is_active == 1, "默认应该启用"
 
@@ -107,9 +107,8 @@ class MonitorTester:
 
         try:
             channels = [
-                (ChannelEnum.BILIBILI.code, "https://space.bilibili.com/123456"),
+                (ChannelEnum.DOUYIN.code, "https://www.douyin.com/user/456789"),
                 (ChannelEnum.YOUTUBE.code, "https://www.youtube.com/@testchannel"),
-                (ChannelEnum.WECHAT_OFFICIAL.code, "https://mp.weixin.qq.com/test")
             ]
 
             created_count = 0
@@ -148,13 +147,13 @@ class MonitorTester:
             params_channel = MonitorConfigQueryRequest(
                 page=1,
                 size=10,
-                channel_code=ChannelEnum.XIAOHONGSHU.code
+                channel_code=ChannelEnum.DOUYIN.code
             )
             queryset_channel = MonitorService.get_monitor_config_queryset(self.test_user_id, params_channel)
             results_channel = await queryset_channel
 
             for config in results_channel:
-                assert config.channel_code == ChannelEnum.XIAOHONGSHU.code, "渠道筛选失败"
+                assert config.channel_code == ChannelEnum.DOUYIN.code, "渠道筛选失败"
 
             # 测试按启用状态筛选
             params_active = MonitorConfigQueryRequest(
@@ -187,7 +186,7 @@ class MonitorTester:
                 raise Exception("没有可用的配置ID")
 
             config_id = self.created_config_ids[0]
-            new_url = "https://www.xiaohongshu.com/user/profile/updated123"
+            new_url = "https://www.douyin.com/user/updated123"
 
             request = MonitorConfigUpdateRequest(target_url=new_url)
             result = await MonitorService.update_monitor_config(
@@ -361,20 +360,15 @@ class MonitorTester:
             # 创建测试任务
             tasks_data = [
                 {
-                    "channel_code": ChannelEnum.XIAOHONGSHU.code,
+                    "channel_code": ChannelEnum.DOUYIN.code,
                     "task_type": TaskTypeEnum.DAILY_COLLECTION.code,
                     "task_status": TaskStatusEnum.SUCCESS.code,
                 },
                 {
-                    "channel_code": ChannelEnum.BILIBILI.code,
+                    "channel_code": ChannelEnum.YOUTUBE.code,
                     "task_type": TaskTypeEnum.MANUAL_REFRESH.code,
                     "task_status": TaskStatusEnum.FAILED.code,
                 },
-                {
-                    "channel_code": ChannelEnum.YOUTUBE.code,
-                    "task_type": TaskTypeEnum.DAILY_COLLECTION.code,
-                    "task_status": TaskStatusEnum.IN_PROGRESS.code,
-                }
             ]
 
             created_count = 0
@@ -402,13 +396,13 @@ class MonitorTester:
             params_channel = MonitorTaskQueryRequest(
                 page=1,
                 size=10,
-                channel_code=ChannelEnum.XIAOHONGSHU.code
+                channel_code=ChannelEnum.DOUYIN.code
             )
             queryset_channel = MonitorTaskService.get_monitor_task_queryset(params_channel)
             results_channel = await queryset_channel
 
             for task in results_channel:
-                assert task.channel_code == ChannelEnum.XIAOHONGSHU.code, "渠道筛选失败"
+                assert task.channel_code == ChannelEnum.DOUYIN.code, "渠道筛选失败"
 
             # 测试按任务类型筛选
             params_type = MonitorTaskQueryRequest(
@@ -457,8 +451,8 @@ class MonitorTester:
         try:
             # 1. 创建监控配置
             create_request = MonitorConfigCreateRequest(
-                channel_code=ChannelEnum.WECHAT_VIDEO.code,
-                target_url="https://channels.weixin.qq.com/test"
+                channel_code=ChannelEnum.YOUTUBE.code,
+                target_url="https://www.youtube.com/@testflow"
             )
             config = await MonitorService.create_monitor_config(self.test_user_id, create_request)
             flow_config_id = config.id
@@ -467,7 +461,7 @@ class MonitorTester:
             query_params = MonitorConfigQueryRequest(
                 page=1,
                 size=10,
-                channel_code=ChannelEnum.WECHAT_VIDEO.code
+                channel_code=ChannelEnum.YOUTUBE.code
             )
             queryset = MonitorService.get_monitor_config_queryset(self.test_user_id, query_params)
             configs = await queryset
@@ -475,7 +469,7 @@ class MonitorTester:
 
             # 3. 修改配置
             update_request = MonitorConfigUpdateRequest(
-                target_url="https://channels.weixin.qq.com/updated"
+                target_url="https://www.youtube.com/@testflow_updated"
             )
             updated_config = await MonitorService.update_monitor_config(
                 self.test_user_id,
@@ -507,7 +501,7 @@ class MonitorTester:
 
             # 6. 创建任务记录
             await MonitorTask.create(
-                channel_code=ChannelEnum.WECHAT_VIDEO.code,
+                channel_code=ChannelEnum.YOUTUBE.code,
                 task_type=TaskTypeEnum.DAILY_COLLECTION.code,
                 biz_id=flow_config_id,
                 task_status=TaskStatusEnum.SUCCESS.code,

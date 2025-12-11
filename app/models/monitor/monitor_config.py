@@ -1,8 +1,7 @@
 from tortoise import fields
 
 from app.models.base import BaseModel
-from app.enums.monitor.channel import ChannelEnum
-from app.util.time_util import get_utc_now
+from app.enums.common.channel import ChannelEnum
 
 
 class MonitorConfig(BaseModel):

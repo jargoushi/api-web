@@ -1,7 +1,7 @@
 from tortoise import fields
 
 from app.models.base import BaseModel
-from app.enums.monitor.channel import ChannelEnum
+from app.enums.common.channel import ChannelEnum
 from app.enums.monitor.task_status import TaskStatusEnum
 from app.enums.monitor.task_type import TaskTypeEnum
 

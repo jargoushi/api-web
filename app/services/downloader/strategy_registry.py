@@ -2,22 +2,16 @@
 
 from typing import List, Optional, Type
 from app.services.downloader.strategies.base import BaseDownloadStrategy
-from app.services.downloader.strategies.xiaohongshu import XiaohongshuStrategy
-from app.services.downloader.strategies.bilibili import BilibiliStrategy
+from app.services.downloader.strategies.douyin import DouyinStrategy
 from app.services.downloader.strategies.youtube import YoutubeStrategy
-from app.services.downloader.strategies.wechat_official import WechatOfficialStrategy
-from app.services.downloader.strategies.wechat_video import WechatVideoStrategy
 
 
 class StrategyRegistry:
     """策略注册表，根据 URL 自动选择策略"""
 
     _strategies: List[Type[BaseDownloadStrategy]] = [
-        XiaohongshuStrategy,
-        BilibiliStrategy,
+        DouyinStrategy,
         YoutubeStrategy,
-        WechatOfficialStrategy,
-        WechatVideoStrategy,
     ]
 
     @classmethod
