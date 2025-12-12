@@ -19,7 +19,7 @@ class SettingResponse(BaseResponseModel):
     setting_key: int = Field(..., description="配置项编码")
     setting_key_name: str = Field(..., description="配置项名称")
     setting_value: Any = Field(..., description="配置值")
-    group: str = Field(..., description="所属分组")
+    group: str = Field(..., description="所属分组名称")
     value_type: str = Field(..., description="值类型")
     is_default: bool = Field(..., description="是否为默认值")
 
@@ -27,6 +27,7 @@ class SettingResponse(BaseResponseModel):
 class SettingGroupResponse(BaseResponseModel):
     """分组配置响应"""
     group: str = Field(..., description="分组名称")
+    group_code: int = Field(..., description="分组编码")
     settings: List[SettingResponse] = Field(..., description="该分组下的配置列表")
 
 

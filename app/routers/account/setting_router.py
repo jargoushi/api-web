@@ -61,12 +61,12 @@ async def reset_setting(setting_key: int, user_id: int = Depends(get_current_use
     return success_response(data=result)
 
 
-@router.get("/group/{group}", response_model=ApiResponse[SettingGroupResponse], summary="按分组获取配置")
-async def get_settings_by_group(group: str, user_id: int = Depends(get_current_user_id)):
+@router.get("/group/{group_code}", response_model=ApiResponse[SettingGroupResponse], summary="按分组获取配置")
+async def get_settings_by_group(group_code: int, user_id: int = Depends(get_current_user_id)):
     """
     按分组获取配置
 
-    - **group**: 分组名称（general/notification/advanced）
+    - **group_code**: 分组编码（1:通用设置 2:通知设置 3:高级设置）
     """
-    result = await setting_service.get_settings_by_group(user_id, group)
+    result = await setting_service.get_settings_by_group(user_id, group_code)
     return success_response(data=result)
