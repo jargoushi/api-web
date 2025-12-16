@@ -1,21 +1,9 @@
-from app.repositories.monitor import TaskRepository
+from app.repositories.monitor.task_repository import task_repository
 from app.schemas.monitor.task import MonitorTaskQueryRequest
 
 
 class TaskService:
     """任务服务类"""
-
-    def __init__(
-        self,
-        repository: TaskRepository = TaskRepository()
-    ):
-        """
-        初始化服务
-
-        Args:
-            repository: 任务仓储实例
-        """
-        self.repository = repository
 
     def get_monitor_task_queryset(self, params: MonitorTaskQueryRequest):
         """
@@ -27,7 +15,7 @@ class TaskService:
         Returns:
             任务查询集（QuerySet）
         """
-        return self.repository.find_with_filters(
+        return task_repository.find_with_filters(
             channel_code=params.channel_code,
             task_type=params.task_type,
             task_status=params.task_status,

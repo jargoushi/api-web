@@ -20,6 +20,7 @@ dependencies = [
     "tortoise-orm>=0.25.1",
     "uvicorn[standard]>=0.38.0",
     "requests>=2.32.5",
+    "yt-dlp>=2025.10.14",
 ]
 
 [dependency-groups]

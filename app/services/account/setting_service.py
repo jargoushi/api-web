@@ -4,8 +4,8 @@ from typing import Any, List, Dict
 
 from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.enums.common.setting_key import SettingGroupEnum
-from app.repositories.account.user_setting_repository import UserSettingRepository
+from app.enums.settings import SettingGroupEnum
+from app.repositories.account.user_setting_repository import user_setting_repository
 from app.schemas.account.setting import (
     SettingResponse,
     SettingGroupResponse,
@@ -17,15 +17,12 @@ from app.schemas.account.setting import (
 class SettingService:
     """用户配置服务类"""
 
-    def __init__(self, repository: UserSettingRepository = UserSettingRepository()):
-        self.repository = repository
-
     async def get_all_settings(self, user_id: int) -> AllSettingsResponse:
         """获取用户所有配置（合并默认值）"""
         log.info(f"用户{user_id}获取所有配置")
 
         # 获取用户已保存的配置
-        user_settings = await self.repository.find_all_by_user(user_id)
+        user_settings = await user_setting_repository.find_all_by_user(user_id)
         user_settings_map: Dict[int, Any] = {
             s.setting_key: s.setting_value for s in user_settings
         }
@@ -68,7 +65,7 @@ class SettingService:
         except ValueError:
             raise BusinessException(message=f"不支持的配置项编码: {setting_key}")
 
-        user_setting = await self.repository.find_by_user_and_key(user_id, setting_key)
+        user_setting = await user_setting_repository.find_by_user_and_key(user_id, setting_key)
 
         if user_setting:
             value = user_setting.setting_value
@@ -99,7 +96,7 @@ class SettingService:
         self._validate_value_type(request.setting_value, setting.value_type)
 
         # 保存配置
-        await self.repository.upsert(user_id, request.setting_key, request.setting_value)
+        await user_setting_repository.upsert(user_id, request.setting_key, request.setting_value)
 
         log.info(f"配置项{request.setting_key}更新成功")
 
@@ -121,7 +118,7 @@ class SettingService:
         except ValueError:
             raise BusinessException(message=f"不支持的配置项编码: {setting_key}")
 
-        await self.repository.delete_by_user_and_key(user_id, setting_key)
+        await user_setting_repository.delete_by_user_and_key(user_id, setting_key)
 
         log.info(f"配置项{setting_key}已重置为默认值")
 
@@ -143,7 +140,7 @@ class SettingService:
         except ValueError:
             raise BusinessException(message=f"不支持的配置分组: {group_code}")
 
-        user_settings = await self.repository.find_all_by_user(user_id)
+        user_settings = await user_setting_repository.find_all_by_user(user_id)
         user_settings_map: Dict[int, Any] = {
             s.setting_key: s.setting_value for s in user_settings
         }

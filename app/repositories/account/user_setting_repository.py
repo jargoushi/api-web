@@ -37,6 +37,19 @@ class UserSettingRepository(BaseRepository[UserSetting]):
         """
         return await self.find_all(user_id=user_id)
 
+    async def find_by_user_and_keys(self, user_id: int, setting_keys: List[int]) -> List[UserSetting]:
+        """
+        根据用户ID和多个配置项编码批量查询配置
+
+        Args:
+            user_id: 用户ID
+            setting_keys: 配置项编码列表
+
+        Returns:
+            匹配的配置列表
+        """
+        return await self.model.filter(user_id=user_id, setting_key__in=setting_keys).all()
+
     async def upsert(self, user_id: int, setting_key: int, setting_value) -> UserSetting:
         """
         更新或创建配置
@@ -77,3 +90,7 @@ class UserSettingRepository(BaseRepository[UserSetting]):
             await setting.delete()
             return True
         return False
+
+
+# 创建单例实例
+user_setting_repository = UserSettingRepository()

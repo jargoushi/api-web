@@ -47,3 +47,6 @@ class ActivationCodeGenerator:
         )
 
         return f"{hash2}{suffix}"
+
+
+code_generator = ActivationCodeGenerator()

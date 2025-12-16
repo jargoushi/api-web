@@ -179,3 +179,7 @@ class UserRepository(BaseRepository[User]):
             更新后的用户实例
         """
         return await self.update(user, **update_data)
+
+
+# 创建单例实例
+user_repository = UserRepository()

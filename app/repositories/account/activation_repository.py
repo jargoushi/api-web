@@ -250,3 +250,7 @@ class ActivationCodeRepository(BaseRepository[ActivationCode]):
         code.status = ActivationCodeStatusEnum.INVALID.code
         await code.save()
         return code
+
+
+# 创建单例实例
+activation_repository = ActivationCodeRepository()

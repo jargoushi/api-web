@@ -2,7 +2,8 @@ from typing import List
 
 from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.repositories.monitor import MonitorConfigRepository, MonitorDailyStatsRepository
+from app.repositories.monitor.monitor_config_repository import monitor_config_repository
+from app.repositories.monitor.monitor_daily_stats_repository import monitor_daily_stats_repository
 from app.schemas.monitor.monitor import (
     MonitorConfigCreateRequest,
     MonitorConfigUpdateRequest,
@@ -17,21 +18,6 @@ from app.util.time_util import get_utc_now
 
 class MonitorService:
     """监控服务类"""
-
-    def __init__(
-        self,
-        config_repository: MonitorConfigRepository = MonitorConfigRepository(),
-        stats_repository: MonitorDailyStatsRepository = MonitorDailyStatsRepository()
-    ):
-        """
-        初始化服务
-
-        Args:
-            config_repository: 监控配置仓储实例
-            stats_repository: 监控每日数据仓储实例
-        """
-        self.config_repository = config_repository
-        self.stats_repository = stats_repository
 
     async def create_monitor_config(self, user_id: int, request: MonitorConfigCreateRequest) -> MonitorConfigResponse:
         """
@@ -48,7 +34,7 @@ class MonitorService:
 
         # TODO: 执行爬虫任务解析链接，获取账号信息
 
-        config = await self.config_repository.create_monitor_config(
+        config = await monitor_config_repository.create_monitor_config(
             user_id=user_id,
             channel_code=request.channel_code,
             target_url=request.target_url,
@@ -69,7 +55,7 @@ class MonitorService:
         Returns:
             监控配置查询集（QuerySet）
         """
-        return self.config_repository.find_with_filters(user_id, params)
+        return monitor_config_repository.find_with_filters(user_id, params)
 
     async def update_monitor_config(
         self,
@@ -93,13 +79,13 @@ class MonitorService:
         log.info(f"用户{user_id}修改监控配置{request.id}，新链接：{request.target_url}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(request.id, user_id)
+        config = await monitor_config_repository.find_by_id(request.id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
         # TODO: 执行爬虫任务解析新链接
 
-        config = await self.config_repository.update_monitor_config(
+        config = await monitor_config_repository.update_monitor_config(
             config,
             target_url=request.target_url if request.target_url else None
         )
@@ -129,11 +115,11 @@ class MonitorService:
         log.info(f"用户{user_id}切换监控配置{request.id}状态为：{request.is_active}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(request.id, user_id)
+        config = await monitor_config_repository.find_by_id(request.id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        config = await self.config_repository.toggle_monitor_status(config, request.is_active)
+        config = await monitor_config_repository.toggle_monitor_status(config, request.is_active)
 
         log.info(f"监控配置{request.id}状态切换成功")
         return MonitorConfigResponse.model_validate(config, from_attributes=True)
@@ -155,11 +141,11 @@ class MonitorService:
         log.info(f"用户{user_id}删除监控配置{id}")
 
         # 查询配置
-        config = await self.config_repository.find_by_id(id, user_id)
+        config = await monitor_config_repository.find_by_id(id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        await self.config_repository.soft_delete_config(config)
+        await monitor_config_repository.soft_delete_config(config)
 
         log.info(f"监控配置{id}删除成功")
         return True
@@ -186,11 +172,11 @@ class MonitorService:
             f"用户{user_id}查询配置{request.config_id}的每日数据，时间范围：{request.start_date} ~ {request.end_date}")
 
         # 验证配置归属
-        config = await self.config_repository.find_by_id(request.config_id, user_id)
+        config = await monitor_config_repository.find_by_id(request.config_id, user_id)
         if not config:
             raise BusinessException(message="监控配置不存在")
 
-        stats = await self.stats_repository.find_by_config_and_date_range(
+        stats = await monitor_daily_stats_repository.find_by_config_and_date_range(
             config_id=request.config_id,
             start_date=request.start_date,
             end_date=request.end_date

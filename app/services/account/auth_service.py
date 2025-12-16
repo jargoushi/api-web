@@ -3,7 +3,8 @@ from fastapi import Request
 from app.core.exceptions import BusinessException
 from app.core.logging import log
 from app.models.account.user import User
-from app.repositories.account import UserRepository, ActivationCodeRepository
+from app.repositories.account.user_repository import user_repository
+from app.repositories.account.activation_repository import activation_repository
 from app.services.account.user_session_service import user_session_service
 from app.util.device import get_client_ip, generate_device_name
 from app.util.jwt import create_user_token, blacklist_user_token, get_jwt_manager
@@ -12,22 +13,6 @@ from app.util.password import verify_password, hash_password
 
 class AuthService:
     """认证相关服务类"""
-
-    def __init__(
-        self,
-        user_repository: UserRepository = UserRepository(),
-        activation_repository: ActivationCodeRepository = ActivationCodeRepository()
-    ):
-        """
-        初始化服务
-
-        Args:
-            user_repository: 用户仓储实例
-            activation_repository: 激活码仓储实例
-        """
-        self.user_repository = user_repository
-        self.session_service = user_session_service
-        self.activation_repository = activation_repository
 
     async def authenticate_user(self, username: str, password: str) -> User:
         """
@@ -43,7 +28,7 @@ class AuthService:
         Raises:
             BusinessException: 验证失败抛出异常
         """
-        user = await self.user_repository.find_by_username(username)
+        user = await user_repository.find_by_username(username)
         if not user:
             raise BusinessException(message="用户名或密码错误", code=401)
 
@@ -53,7 +38,7 @@ class AuthService:
 
         # 检查激活码是否过期
         if user.activation_code:
-            activation_code_obj = await self.activation_repository.find_by_code(user.activation_code)
+            activation_code_obj = await activation_repository.find_by_code(user.activation_code)
             if activation_code_obj and activation_code_obj.is_expired:
                 raise BusinessException(message="激活码已过期，请重新激活", code=401)
 
@@ -89,7 +74,7 @@ class AuthService:
 
         # 4. 创建新会话（会自动删除旧会话）
         jwt_manager = get_jwt_manager()
-        await self.session_service.create_session(
+        await user_session_service.create_session(
             user_id=user.id,
             token=access_token,
             device_id=device_id,
@@ -113,7 +98,7 @@ class AuthService:
             BusinessException: 注销失败抛出异常
         """
         # 1. 撤销用户会话
-        await self.session_service.revoke_session(token)
+        await user_session_service.revoke_session(token)
 
         # 2. 将token加入黑名单
         blacklist_user_token(token)
@@ -129,7 +114,7 @@ class AuthService:
             被注销的设备数量
         """
         # 撤销用户所有会话
-        await self.session_service.revoke_user_sessions(user_id)
+        await user_session_service.revoke_user_sessions(user_id)
 
     async def change_password(self, user: User, new_password: str) -> bool:
         """
@@ -144,7 +129,7 @@ class AuthService:
         """
         # 1. 更新密码（schema已验证复杂度）
         user.password = hash_password(new_password)
-        await self.user_repository.update(user)
+        await user_repository.update(user)
 
         # 2. 注销所有其他设备（强制重新登录）
         await self.logout_all_devices(user.id)

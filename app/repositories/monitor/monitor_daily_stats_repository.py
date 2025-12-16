@@ -180,3 +180,7 @@ class MonitorDailyStatsRepository(BaseRepository[MonitorDailyStats]):
                 content_count=content_count,
                 extra_data=extra_data
             )
+
+
+# 创建单例实例
+monitor_daily_stats_repository = MonitorDailyStatsRepository()

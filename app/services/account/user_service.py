@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from app.core.exceptions import BusinessException
 from app.core.logging import log
-from app.repositories.account import UserRepository
+from app.repositories.account.user_repository import user_repository
 from app.schemas.account.user import UserRegisterRequest, UserUpdateRequest, UserResponse, UserQueryRequest
 from app.services.account.activation_service import activation_service
 from app.util.transaction import transactional
@@ -11,19 +11,6 @@ from app.util.password import hash_password
 
 class UserService:
     """用户服务类"""
-
-    def __init__(
-        self,
-        user_repository: UserRepository = UserRepository()
-    ):
-        """
-        初始化服务
-
-        Args:
-            user_repository: 用户仓储实例
-        """
-        self.user_repository = user_repository
-        self.activation_service = activation_service
 
     @transactional
     async def register_user(self, user_data: UserRegisterRequest) -> UserResponse:
@@ -35,7 +22,7 @@ class UserService:
         log.info(f"用户注册：{user_data.username}")
 
         # 1. 验证激活码是否为已分发状态
-        await self.activation_service.get_distributed_activation_code(user_data.activation_code)
+        await activation_service.get_distributed_activation_code(user_data.activation_code)
 
         # 2. 检查用户名唯一性
         is_conflict = await self.check_username_unique(user_data.username)
@@ -44,7 +31,7 @@ class UserService:
 
         # 3. 创建用户（事务内操作）
         hashed_password = hash_password(user_data.password)
-        user_obj = await self.user_repository.create_user(
+        user_obj = await user_repository.create_user(
             username=user_data.username,
             password=hashed_password,
             activation_code=user_data.activation_code,
@@ -53,7 +40,7 @@ class UserService:
         )
 
         # 4. 激活激活码（事务内操作）
-        await self.activation_service.activate_activation_code(user_data.activation_code)
+        await activation_service.activate_activation_code(user_data.activation_code)
         log.info(f"用户 {user_data.username} 注册成功，激活码 {user_data.activation_code} 已激活")
 
         return UserResponse.model_validate(user_obj, from_attributes=True)
@@ -71,7 +58,7 @@ class UserService:
         Raises:
             BusinessException: 用户不存在
         """
-        user = await self.user_repository.get_by_id(user_id)
+        user = await user_repository.get_by_id(user_id)
         if not user:
             raise BusinessException(message="用户不存在", code=404)
 
@@ -91,7 +78,7 @@ class UserService:
         Raises:
             BusinessException: 用户不存在或字段冲突
         """
-        user = await self.user_repository.get_by_id(user_id)
+        user = await user_repository.get_by_id(user_id)
         if not user:
             raise BusinessException(message="用户不存在", code=404)
 
@@ -110,7 +97,7 @@ class UserService:
         if is_conflict:
             raise BusinessException(message="用户名、手机号或邮箱已被使用", code=400)
 
-        await self.user_repository.update_user(user, **update_data)
+        await user_repository.update_user(user, **update_data)
 
         return UserResponse.model_validate(user, from_attributes=True)
 
@@ -124,7 +111,7 @@ class UserService:
         Returns:
             用户查询集（QuerySet）
         """
-        return self.user_repository.find_with_filters(
+        return user_repository.find_with_filters(
             username=params.username,
             phone=params.phone,
             email=params.email,
@@ -141,7 +128,7 @@ class UserService:
         Returns:
             bool: True 表示已存在（不唯一），False 表示可用（唯一）
         """
-        return await self.user_repository.username_exists(username)
+        return await user_repository.username_exists(username)
 
     async def check_user_fields_unique(
         self,
@@ -166,7 +153,7 @@ class UserService:
             return False
 
         # 构建查询条件
-        query = self.user_repository.get_queryset()
+        query = user_repository.get_queryset()
 
         if user_id is not None:
             query = query.exclude(id=user_id)

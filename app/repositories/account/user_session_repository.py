@@ -249,3 +249,7 @@ class UserSessionRepository(BaseRepository[UserSession]):
             是否删除成功
         """
         return await self.delete(session)
+
+
+# 创建单例实例
+user_session_repository = UserSessionRepository()

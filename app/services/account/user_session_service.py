@@ -1,21 +1,12 @@
 from typing import Optional
 
 from app.core.logging import log
-from app.repositories.account import UserSessionRepository
+from app.repositories.account.user_session_repository import user_session_repository
 from app.models.account.user_session import UserSession
 
 
 class UserSessionService:
     """用户会话服务类"""
-
-    def __init__(self, repository: UserSessionRepository = UserSessionRepository()):
-        """
-        初始化服务
-
-        Args:
-            repository: 用户会话仓储实例
-        """
-        self.repository = repository
 
     async def create_session(
         self,
@@ -42,9 +33,9 @@ class UserSessionService:
         Returns:
             创建的会话对象
         """
-        await self.repository.delete_user_sessions(user_id)
+        await user_session_repository.delete_user_sessions(user_id)
 
-        session = await self.repository.create_session(
+        session = await user_session_repository.create_session(
             user_id=user_id,
             token=token,
             device_id=device_id,
@@ -67,11 +58,11 @@ class UserSessionService:
         Returns:
             会话实例，如果不存在或已过期则返回 None
         """
-        session = await self.repository.find_active_session(user_id)
+        session = await user_session_repository.find_active_session(user_id)
 
         # 检查会话是否过期
         if session and session.is_expired:
-            await self.repository.deactivate_session(session)
+            await user_session_repository.deactivate_session(session)
             return None
 
         return session
@@ -86,15 +77,15 @@ class UserSessionService:
         Returns:
             会话实例，如果不存在或无效则返回 None
         """
-        session = await self.repository.find_by_token(token)
+        session = await user_session_repository.find_by_token(token)
 
         # 检查会话状态和过期时间
         if session:
             if not session.is_active or session.is_expired:
-                await self.repository.delete_session(session)
+                await user_session_repository.delete_session(session)
                 return None
 
-            await self.repository.update_last_accessed_time(session)
+            await user_session_repository.update_last_accessed_time(session)
 
         return session
 
@@ -108,9 +99,9 @@ class UserSessionService:
         Returns:
             是否成功撤销
         """
-        session = await self.repository.find_by_token(token)
+        session = await user_session_repository.find_by_token(token)
         if session:
-            await self.repository.deactivate_session(session)
+            await user_session_repository.deactivate_session(session)
             return True
         return False
 
@@ -129,7 +120,7 @@ class UserSessionService:
         Returns:
             撤销的会话数量
         """
-        return await self.repository.deactivate_user_sessions(user_id, exclude_token)
+        return await user_session_repository.deactivate_user_sessions(user_id, exclude_token)
 
     async def cleanup_expired_sessions(self) -> int:
         """
@@ -142,10 +133,10 @@ class UserSessionService:
         from datetime import timedelta
 
         expired_time = get_utc_now()
-        count = await self.repository.delete_expired_sessions(expired_time)
+        count = await user_session_repository.delete_expired_sessions(expired_time)
 
         cleanup_threshold = expired_time - timedelta(days=7)
-        inactive_count = await self.repository.delete_inactive_sessions(cleanup_threshold)
+        inactive_count = await user_session_repository.delete_inactive_sessions(cleanup_threshold)
 
         total = count + inactive_count
         if total > 0:
@@ -164,7 +155,7 @@ class UserSessionService:
         Returns:
             是否成功延长
         """
-        await self.repository.extend_session_time(session, minutes)
+        await user_session_repository.extend_session_time(session, minutes)
         return True
 
 

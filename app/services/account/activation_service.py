@@ -6,7 +6,7 @@ from app.core.exceptions import BusinessException
 from app.core.logging import log
 from app.enums.account.activation_type import ActivationTypeEnum
 from app.enums.account.activation_status import ActivationCodeStatusEnum
-from app.repositories.account import ActivationCodeRepository
+from app.repositories.account.activation_repository import activation_repository
 from app.schemas.account.activation import (
     ActivationCodeBatchCreateRequest,
     ActivationCodeBatchResponse,
@@ -15,27 +15,11 @@ from app.schemas.account.activation import (
     ActivationCodeInvalidateRequest,
     ActivationCodeResponse, ActivationCodeQueryRequest
 )
-from app.util.activation_code_generator import ActivationCodeGenerator
-from app.util.time_util import get_utc_now
+from app.util.activation_code_generator import code_generator
 
 
 class ActivationCodeService:
     """激活码服务类"""
-
-    def __init__(
-        self,
-        repository: ActivationCodeRepository = ActivationCodeRepository(),
-        code_generator: ActivationCodeGenerator = ActivationCodeGenerator()
-    ):
-        """
-        初始化服务
-
-        Args:
-            repository: 激活码仓储实例
-            code_generator: 激活码生成器实例
-        """
-        self.repository = repository
-        self.code_generator = code_generator
 
     async def _generate_unique_code(self) -> str:
         """
@@ -45,8 +29,8 @@ class ActivationCodeService:
             唯一的激活码字符串
         """
         while True:
-            code = self.code_generator.generate()
-            if not await self.repository.code_exists(code):
+            code = code_generator.generate()
+            if not await activation_repository.code_exists(code):
                 return code
 
     async def init_activation_codes(self, request: ActivationCodeBatchCreateRequest) -> ActivationCodeBatchResponse:
@@ -75,7 +59,7 @@ class ActivationCodeService:
 
             for i in range(item.count):
                 code = await self._generate_unique_code()
-                await self.repository.create_activation_code(
+                await activation_repository.create_activation_code(
                     activation_code=code,
                     type_code=item.type,
                     status=ActivationCodeStatusEnum.UNUSED.code,
@@ -120,7 +104,7 @@ class ActivationCodeService:
         """
         log.info(f"派发激活码，类型：{request.type}，数量：{request.count}")
 
-        codes = await self.repository.find_unused_codes(
+        codes = await activation_repository.find_unused_codes(
             type_code=request.type,
             limit=request.count
         )
@@ -132,7 +116,7 @@ class ActivationCodeService:
 
         activation_codes = []
         for code in codes:
-            await self.repository.distribute_activation_code(code)
+            await activation_repository.distribute_activation_code(code)
             activation_codes.append(code.activation_code)
 
         log.info(f"成功派发{len(activation_codes)}个激活码")
@@ -153,7 +137,7 @@ class ActivationCodeService:
         """
         log.info(f"查询已分发激活码：{activation_code}")
 
-        code = await self.repository.find_by_code(activation_code)
+        code = await activation_repository.find_by_code(activation_code)
 
         if not code:
             raise BusinessException(message="激活码不存在")
@@ -179,7 +163,7 @@ class ActivationCodeService:
         """
         log.info(f"激活激活码：{activation_code}")
 
-        code = await self.repository.find_by_code(activation_code)
+        code = await activation_repository.find_by_code(activation_code)
 
         if not code:
             raise BusinessException(message="激活码不存在")
@@ -193,7 +177,7 @@ class ActivationCodeService:
         if code.status == ActivationCodeStatusEnum.ACTIVATED.code:
             raise BusinessException(message="激活码已激活，无需重复激活")
 
-        await self.repository.activate_activation_code(code, settings.ACTIVATION_GRACE_HOURS)
+        await activation_repository.activate_activation_code(code, settings.ACTIVATION_GRACE_HOURS)
 
         log.info(f"激活码{activation_code}激活成功")
         return ActivationCodeResponse.model_validate(code, from_attributes=True)
@@ -213,7 +197,7 @@ class ActivationCodeService:
         """
         log.info(f"作废激活码：{request.activation_code}")
 
-        code = await self.repository.find_by_code(request.activation_code)
+        code = await activation_repository.find_by_code(request.activation_code)
 
         if not code:
             raise BusinessException(message="激活码不存在")
@@ -224,7 +208,7 @@ class ActivationCodeService:
         if code.status == ActivationCodeStatusEnum.UNUSED.code:
             raise BusinessException(message="激活码未分发，无法作废")
 
-        await self.repository.invalidate_activation_code(code)
+        await activation_repository.invalidate_activation_code(code)
 
         log.info(f"激活码{request.activation_code}已作废")
         return True
@@ -242,7 +226,7 @@ class ActivationCodeService:
         Raises:
             BusinessException: 激活码不存在
         """
-        code = await self.repository.find_by_code(activation_code)
+        code = await activation_repository.find_by_code(activation_code)
 
         if not code:
             raise BusinessException(message="激活码不存在")
@@ -259,7 +243,7 @@ class ActivationCodeService:
         Returns:
             激活码查询集（QuerySet）
         """
-        return self.repository.find_with_filters(params)
+        return activation_repository.find_with_filters(params)
 
 
 # 创建服务实例

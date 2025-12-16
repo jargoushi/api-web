@@ -202,3 +202,7 @@ class MonitorConfigRepository(BaseRepository[MonitorConfig]):
         config.last_run_status = last_run_status
         await config.save()
         return config
+
+
+# 创建单例实例
+monitor_config_repository = MonitorConfigRepository()
