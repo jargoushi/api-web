@@ -5,9 +5,7 @@ from app.core.logging import log
 from app.models.account.user import User
 from app.repositories.account.user_repository import user_repository
 from app.repositories.account.activation_repository import activation_repository
-from app.services.account.user_session_service import user_session_service
-from app.util.device import get_client_ip, generate_device_name
-from app.util.jwt import create_user_token, blacklist_user_token, get_jwt_manager
+from app.util.jwt import create_user_token, blacklist_user_token
 from app.util.password import verify_password, hash_password
 
 
@@ -65,26 +63,8 @@ class AuthService:
         # 2. 生成token
         token_info = create_user_token(user.id, request)
         access_token = token_info["access_token"]
-        device_id = token_info["device_id"]
 
-        # 3. 获取设备信息
-        user_agent = request.headers.get("User-Agent", "Unknown")
-        ip_address = get_client_ip(request)
-        device_name = generate_device_name(user_agent)
-
-        # 4. 创建新会话（会自动删除旧会话）
-        jwt_manager = get_jwt_manager()
-        await user_session_service.create_session(
-            user_id=user.id,
-            token=access_token,
-            device_id=device_id,
-            expire_minutes=jwt_manager.expire_minutes,
-            device_name=device_name,
-            user_agent=user_agent,
-            ip_address=ip_address
-        )
-
-        log.info(f"用户 {username} 登录成功，设备: {device_name}")
+        log.info(f"用户 {username} 登录成功")
         return access_token
 
     async def logout_user(self, token: str) -> None:
@@ -97,24 +77,9 @@ class AuthService:
         Raises:
             BusinessException: 注销失败抛出异常
         """
-        # 1. 撤销用户会话
-        await user_session_service.revoke_session(token)
-
-        # 2. 将token加入黑名单
+        # 将token加入黑名单
         blacklist_user_token(token)
-
-    async def logout_all_devices(self, user_id: int) -> None:
-        """
-        注销用户的所有设备
-
-        Args:
-            user_id: 用户ID
-
-        Returns:
-            被注销的设备数量
-        """
-        # 撤销用户所有会话
-        await user_session_service.revoke_user_sessions(user_id)
+        log.info("用户注销成功")
 
     async def change_password(self, user: User, new_password: str) -> bool:
         """
@@ -127,12 +92,9 @@ class AuthService:
         Returns:
             是否修改成功
         """
-        # 1. 更新密码（schema已验证复杂度）
+        # 更新密码（schema已验证复杂度）
         user.password = hash_password(new_password)
         await user_repository.update(user)
-
-        # 2. 注销所有其他设备（强制重新登录）
-        await self.logout_all_devices(user.id)
 
         log.info(f"用户 {user.username} 修改密码成功")
         return True

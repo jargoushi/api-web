@@ -35,29 +35,6 @@ CREATE TABLE `user` (
     KEY `idx_created_at` (`created_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='用户表';
 
-
--- 用户会话表
-CREATE TABLE `user_sessions` (
-    `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '会话ID',
-    `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
-    `token` varchar(512) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'JWT Token',
-    `device_id` varchar(64) COLLATE utf8mb4_general_ci NOT NULL COMMENT '设备指纹',
-    `device_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '设备名称',
-    `user_agent` text COLLATE utf8mb4_general_ci COMMENT '用户代理字符串',
-    `ip_address` varchar(45) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'IP地址（支持IPv6）',
-    `is_active` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '会话是否活跃 0:否 1:是',
-    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `last_accessed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后访问时间',
-    `expires_at` datetime NOT NULL COMMENT '过期时间',
-    PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_token` (`token`) USING BTREE,
-    UNIQUE KEY `uk_user_active` (`user_id`, `is_active`) USING BTREE,
-    KEY `idx_user_id` (`user_id`) USING BTREE,
-    KEY `idx_device_id` (`device_id`) USING BTREE,
-    KEY `idx_expires_at` (`expires_at`) USING BTREE,
-    KEY `idx_is_active` (`is_active`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='用户会话表';
-
 CREATE TABLE `monitor_configs` (
 	`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
 	`user_id` BIGINT UNSIGNED NOT NULL COMMENT '所属用户ID',

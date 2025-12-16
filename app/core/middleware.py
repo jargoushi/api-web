@@ -12,9 +12,7 @@ from app.core.exceptions import BusinessException
 from app.core.logging import log
 from app.models.account.activation_code import ActivationCode
 from app.models.account.user import User
-from app.models.account.user_session import UserSession
 from app.schemas.common.response import error_response
-from app.services.account.user_session_service import UserSessionService
 from app.util.jwt import get_jwt_manager
 
 
@@ -124,14 +122,6 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             # 验证token并获取用户信息
             payload = self.jwt_manager.verify_token(token)
             user_id = payload["user_id"]
-            device_id = payload["device_id"]
-
-            # 验证会话状态
-            session = await self._validate_session(token, user_id, device_id)
-            if not session:
-                return self._create_error_response(
-                    BusinessException(message="会话已失效，请重新登录", code=401)
-                )
 
             # 验证用户状态
             user = await self._validate_user(user_id)
@@ -157,9 +147,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
             # 将用户信息添加到请求状态中
             request.state.user = user
-            request.state.session = session
             request.state.user_id = user_id
-            request.state.device_id = device_id
+            request.state.token = token
 
             # 记录访问日志
             log.info(f"用户 {user.username} 访问 {path}")
@@ -187,27 +176,6 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         authorization = request.headers.get("Authorization")
         return self.jwt_manager.extract_token_from_header(authorization)
 
-    async def _validate_session(self, token: str, user_id: int, device_id: str) -> Optional[UserSession]:
-        """验证会话状态"""
-        try:
-            session_service = UserSessionService()
-            session = await session_service.get_session_by_token(token)
-            if not session:
-                log.debug(f"会话不存在: user_id={user_id}")
-                return None
-
-            # 验证用户ID和设备ID匹配
-            if session.user_id != user_id or session.device_id != device_id:
-                log.warning(f"会话信息不匹配: token_user_id={session.user_id}, token_device_id={session.device_id}")
-                # 自动清理异常会话
-                await session_service.revoke_session(token)
-                return None
-
-            return session
-        except Exception as e:
-            log.error(f"验证会话时出错: {str(e)}")
-            return None
-
     @staticmethod
     async def _validate_user(user_id: int) -> Optional[User]:
         """验证用户状态"""
@@ -219,7 +187,6 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             log.error(f"验证用户时出错: {str(e)}")
             return None
-
 
 
 class ProcessTimeMiddleware(BaseHTTPMiddleware):

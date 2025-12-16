@@ -3,9 +3,7 @@ from fastapi import APIRouter, Request, Depends
 from app.schemas.account.auth import LoginRequest, ChangePasswordRequest
 from app.schemas.common.response import ApiResponse, success_response
 from app.services.account.auth_service import auth_service
-from app.util.auth_context import (
-    get_current_user, get_current_user_id, get_current_session
-)
+from app.util.auth_context import get_current_user, get_current_token
 
 router = APIRouter()
 
@@ -29,20 +27,11 @@ async def login_user(login_data: LoginRequest, request: Request):
 
 
 @router.post("/logout", summary="用户注销")
-async def logout_user(session=Depends(get_current_session)):
+async def logout_user(token: str = Depends(get_current_token)):
     """
     用户注销
     """
-    await auth_service.logout_user(session.token)
-    return success_response(data=True)
-
-
-@router.post("/logout-all", summary="注销所有设备")
-async def logout_all_devices(user_id: int = Depends(get_current_user_id)):
-    """
-    注销用户的所有设备
-    """
-    await auth_service.logout_all_devices(user_id)
+    await auth_service.logout_user(token)
     return success_response(data=True)
 
 

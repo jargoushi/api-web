@@ -4,11 +4,10 @@
 """
 
 from .base import BaseRepository
-from .account import ActivationCodeRepository, UserRepository, UserSessionRepository
+from .account import ActivationCodeRepository, UserRepository
 
 __all__ = [
     "BaseRepository",
     "ActivationCodeRepository",
     "UserRepository",
-    "UserSessionRepository",
 ]
