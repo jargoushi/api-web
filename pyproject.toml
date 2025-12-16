@@ -3,7 +3,7 @@ name = "api-web"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "aiomysql>=0.2.0",
     "aiosqlite>=0.21.0",

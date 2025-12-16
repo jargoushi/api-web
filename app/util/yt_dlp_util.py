@@ -21,6 +21,7 @@ async def download(
     url: str,
     output_dir: str,
     proxy: Optional[str] = None,
+    cookies_file: Optional[str] = None,
     on_progress: Optional[ProgressCallback] = None,
     extra_opts: Optional[Dict] = None
 ) -> str:
@@ -53,7 +54,7 @@ async def download(
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # 构建配置
-    ydl_opts = _build_opts(output_dir, proxy, on_progress)
+    ydl_opts = _build_opts(output_dir, proxy, cookies_file, on_progress)
 
     # 合并额外配置
     if extra_opts:
@@ -70,6 +71,7 @@ async def download(
 def _build_opts(
     output_dir: str,
     proxy: Optional[str],
+    cookies_file: Optional[str],
     on_progress: Optional[ProgressCallback]
 ) -> Dict:
     """构建 yt-dlp 配置"""
@@ -82,6 +84,10 @@ def _build_opts(
 
     if proxy:
         opts["proxy"] = proxy
+
+    # 如果提供了 cookies 文件则使用
+    if cookies_file:
+        opts["cookiefile"] = cookies_file
 
     if on_progress:
         opts["progress_hooks"] = [_create_progress_hook(on_progress)]
