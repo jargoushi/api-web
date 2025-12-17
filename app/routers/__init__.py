@@ -5,7 +5,7 @@
 from fastapi import APIRouter
 
 # 导入各模块路由
-from app.routers.account import auth_router, user_router, activation_router, setting_router
+from app.routers.account import auth_router, user_router, activation_router, setting_router, account_router
 from app.routers.monitor import monitor_router, task_router, browser_router
 from app.routers.system import common_router
 
@@ -48,6 +48,13 @@ def setup_routers():
         tags=["账户-用户配置"]
     )
 
+    # 账号管理相关路由（需要认证）
+    api_router.include_router(
+        account_router.router,
+        prefix="/accounts",
+        tags=["账户-账号管理"]
+    )
+
     # ==================== 监控模块 ====================
     # 监控中心相关路由（需要认证 - 由中间件控制）
     api_router.include_router(
@@ -71,7 +78,7 @@ def setup_routers():
     )
 
     # ==================== 系统模块 ====================
-    # 公共业务路由（枚举配置、字典数据等，不需要认证）
+    # 公共业务路由（枚举配置、项目信息等，不需要认证）
     api_router.include_router(
         common_router.router,
         prefix="/common",

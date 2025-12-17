@@ -7,8 +7,8 @@ from typing import List, Dict, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from app.db.config import init_db, close_db
-from app.models.account.user_setting import UserSetting
-from app.enums.common.setting_key import (
+from app.models.account.setting import Setting
+from app.enums.settings import (
     SettingGroupEnum,
     GeneralSettingEnum,
     NotificationSettingEnum,
@@ -35,7 +35,7 @@ class SettingTester:
     @staticmethod
     async def cleanup_test_database():
         print("正在清理测试数据库...")
-        await UserSetting.all().delete()
+        await Setting.all().delete()
         await close_db()
         print("测试数据库清理完成")
 
@@ -51,7 +51,7 @@ class SettingTester:
         print("\n测试1: 获取所有配置（默认值）")
         try:
             result = await self.service.get_all_settings(self.test_user_id)
-            assert len(result.groups) == 3, f"应该有3个分组"
+            assert len(result.groups) == 4, f"应该有4个分组"
             for group in result.groups:
                 for setting in group.settings:
                     assert setting.is_default is True
@@ -140,7 +140,7 @@ class SettingTester:
             await self.service.get_settings_by_group(self.test_user_id, 99999)
             self.log_test_result("获取不存在的分组", False, "应该抛出异常")
         except Exception as e:
-            if "不支持的配置分组" in str(e):
+            if "不支持的分组编码" in str(e):
                 self.log_test_result("获取不存在的分组", True, "正确抛出异常")
             else:
                 self.log_test_result("获取不存在的分组", False, str(e))
@@ -150,14 +150,14 @@ class SettingTester:
         print("\n测试9: 分组枚举结构")
         try:
             # 验证分组
-            assert len(list(SettingGroupEnum)) == 3
+            assert len(list(SettingGroupEnum)) == 4
             # 验证每个分组都有配置项
             for group in SettingGroupEnum:
                 assert len(group.get_settings()) > 0
             # 验证 get_all_settings
             all_settings = SettingGroupEnum.get_all_settings()
-            assert len(all_settings) == 6
-            self.log_test_result("分组枚举结构", True, f"3个分组，6个配置项")
+            assert len(all_settings) == 9
+            self.log_test_result("分组枚举结构", True, f"4个分组，9个配置项")
         except Exception as e:
             self.log_test_result("分组枚举结构", False, str(e))
 

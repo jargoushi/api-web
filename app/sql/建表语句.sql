@@ -89,15 +89,46 @@ CREATE TABLE `tasks` (
 	KEY `idx_created` ( `created_at` ) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '任务表';
 
--- 用户配置表
-CREATE TABLE `user_settings` (
+-- 统一配置表（合并 user_settings 和 account_settings）
+CREATE TABLE `settings` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
-    `setting_key` INT UNSIGNED NOT NULL COMMENT '配置项编码 (对应 SettingKeyEnum)',
+    `owner_type` TINYINT UNSIGNED NOT NULL COMMENT '所属类型 1:用户 2:账号',
+    `owner_id` BIGINT UNSIGNED NOT NULL COMMENT '所属ID（用户ID或账号ID）',
+    `setting_key` INT UNSIGNED NOT NULL COMMENT '配置项编码',
     `setting_value` JSON NOT NULL COMMENT '配置值',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_user_key` (`user_id`, `setting_key`) USING BTREE COMMENT '每用户每配置项唯一',
+    UNIQUE KEY `uk_owner_key` (`owner_type`, `owner_id`, `setting_key`) USING BTREE COMMENT '所有者+配置项唯一',
+    KEY `idx_owner` (`owner_type`, `owner_id`) USING BTREE
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '配置表';
+
+-- 账号表
+CREATE TABLE `accounts` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '账号ID',
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '所属用户ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '账号名称',
+    `platform_account` VARCHAR(100) DEFAULT NULL COMMENT '第三方平台账号',
+    `platform_password` VARCHAR(100) DEFAULT NULL COMMENT '第三方平台密码',
+    `description` VARCHAR(500) DEFAULT NULL COMMENT '账号描述',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
+    PRIMARY KEY (`id`) USING BTREE,
     KEY `idx_user_id` (`user_id`) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '用户配置表';
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '账号表';
+
+-- 账号项目渠道绑定表
+CREATE TABLE `account_project_channels` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `account_id` BIGINT UNSIGNED NOT NULL COMMENT '账号ID',
+    `project_code` INT UNSIGNED NOT NULL COMMENT '项目枚举code',
+    `channel_code` INT UNSIGNED NOT NULL COMMENT '渠道枚举code',
+    `browser_id` VARCHAR(100) DEFAULT NULL COMMENT '比特浏览器ID',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_binding` (`account_id`, `project_code`, `channel_code`) USING BTREE COMMENT '账号+项目+渠道唯一',
+    KEY `idx_account_id` (`account_id`) USING BTREE
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '账号项目渠道绑定表';
+

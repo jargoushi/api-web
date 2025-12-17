@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import List, Dict, Optional
 
-from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from pydantic import Field, ConfigDict, field_validator, model_validator
 
 from app.enums.account.activation_type import ActivationTypeEnum
 from app.schemas.common.base import BaseRequestModel, BaseResponseModel
 from app.schemas.common.pagination import PageRequest
 
 
-class ActivationCodeCreateItem(BaseModel):
+class ActivationCodeCreateItem(BaseRequestModel):
     """单个激活码创建项"""
     type: int = Field(..., ge=0, le=3,
                       description=f"激活码类型：{', '.join([f'{e.code}：{e.desc}' for e in ActivationTypeEnum])}")

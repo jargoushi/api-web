@@ -2,6 +2,7 @@
 
 from .user import User
 from .activation_code import ActivationCode
-from .user_setting import UserSetting
+from .account import Account, AccountProjectChannel
+from .setting import Setting
 
-__all__ = ["User", "ActivationCode", "UserSetting"]
+__all__ = ["User", "ActivationCode", "Account", "AccountProjectChannel", "Setting"]
