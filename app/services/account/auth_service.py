@@ -5,7 +5,7 @@ from app.core.logging import log
 from app.models.account.user import User
 from app.repositories.account.user_repository import user_repository
 from app.repositories.account.activation_repository import activation_repository
-from app.util.jwt import create_user_token, blacklist_user_token
+from app.util.jwt import jwt_manager
 from app.util.password import verify_password, hash_password
 
 
@@ -61,7 +61,7 @@ class AuthService:
         user = await self.authenticate_user(username, password)
 
         # 2. 生成token
-        token_info = create_user_token(user.id, request)
+        token_info = jwt_manager.create_access_token(user.id)
         access_token = token_info["access_token"]
 
         log.info(f"用户 {username} 登录成功")
@@ -69,16 +69,11 @@ class AuthService:
 
     async def logout_user(self, token: str) -> None:
         """
-        用户注销
+        用户注销（无状态JWT无需服务端处理，客户端丢弃token即可）
 
         Args:
             token: JWT Token
-
-        Raises:
-            BusinessException: 注销失败抛出异常
         """
-        # 将token加入黑名单
-        blacklist_user_token(token)
         log.info("用户注销成功")
 
     async def change_password(self, user: User, new_password: str) -> bool:

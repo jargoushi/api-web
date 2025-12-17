@@ -17,7 +17,7 @@ from app.schemas.account.auth import LoginRequest
 from app.schemas.account.activation import ActivationCodeBatchCreateRequest, ActivationCodeCreateItem, ActivationCodeGetRequest
 from app.services.account.user_service import UserService
 from app.services.account.activation_service import ActivationCodeService
-from app.util.jwt import get_jwt_manager
+from app.util.jwt import jwt_manager
 from app.enums.account.activation_type import ActivationTypeEnum
 from app.enums.account.activation_status import ActivationCodeStatusEnum
 
@@ -125,8 +125,7 @@ class AuthModuleTester:
             test_user = self.test_users[0]
 
             # 生成token
-            from app.util.jwt import create_user_token
-            token_info = create_user_token(test_user["id"])
+            token_info = jwt_manager.create_access_token(test_user["id"])
 
             # 验证token结构
             assert "access_token" in token_info, "缺少access_token"
@@ -158,12 +157,11 @@ class AuthModuleTester:
             test_user = self.test_users[1]
 
             # 生成token
-            from app.util.jwt import create_user_token, verify_user_token
-            token_info = create_user_token(test_user["id"])
+            token_info = jwt_manager.create_access_token(test_user["id"])
             token = token_info["access_token"]
 
             # 验证token
-            payload = verify_user_token(token)
+            payload = jwt_manager.verify_token(token)
 
             # 验证载荷内容
             assert payload["user_id"] == test_user["id"], "用户ID不匹配"
@@ -230,19 +228,13 @@ class AuthModuleTester:
                 request=mock_request
             )
 
-            # 注销用户
+            # 注销用户（无状态JWT只需记录日志）
             await auth_service.logout_user(token)
-
-            # 验证token已加入黑名单
-            jwt_manager = get_jwt_manager()
-            is_blacklisted = jwt_manager.is_blacklisted(token)
-            assert is_blacklisted is True, "注销后token应该被加入黑名单"
 
             self.log_test_result(
                 "用户注销",
                 True,
-                f"用户 {test_user['username']} 注销成功",
-                {"token_blacklisted": is_blacklisted}
+                f"用户 {test_user['username']} 注销成功"
             )
 
         except Exception as e:
@@ -332,28 +324,17 @@ class AuthModuleTester:
             assert token is not None, "登录应该返回token"
 
             # 2. 验证token
-            from app.util.jwt import verify_user_token
-            payload = verify_user_token(token)
+            payload = jwt_manager.verify_token(token)
             assert payload["user_id"] == user.id, "token用户ID应该匹配"
 
             # 3. 注销用户
             await auth_service.logout_user(token)
 
-            # 4. 验证注销后状态
-            jwt_manager = get_jwt_manager()
-            is_token_blacklisted = jwt_manager.is_blacklisted(token)
-            assert is_token_blacklisted is True, "注销后token应该被加入黑名单"
-
             self.log_test_result(
                 "完整认证流程",
                 True,
                 f"用户 {user.username} 完成完整认证流程",
-                {
-                    "login": True,
-                    "token_valid": True,
-                    "logout": True,
-                    "token_blacklisted": True
-                }
+                {"login": True, "token_valid": True, "logout": True}
             )
 
         except Exception as e:
