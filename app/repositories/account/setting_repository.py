@@ -21,14 +21,14 @@ class SettingRepository(BaseRepository[Setting]):
     ) -> Optional[Setting]:
         """获取指定配置"""
         return await self.get_or_none(
-            owner_type=owner_type.value, owner_id=owner_id, setting_key=setting_key
+            owner_type=owner_type.code, owner_id=owner_id, setting_key=setting_key
         )
 
     async def find_all_by_owner(
         self, owner_type: SettingOwnerType, owner_id: int
     ) -> List[Setting]:
         """获取所有配置"""
-        return await self.find_all(owner_type=owner_type.value, owner_id=owner_id)
+        return await self.find_all(owner_type=owner_type.code, owner_id=owner_id)
 
     async def upsert(
         self, owner_type: SettingOwnerType, owner_id: int, setting_key: int, setting_value: Any
@@ -40,7 +40,7 @@ class SettingRepository(BaseRepository[Setting]):
             await existing.save()
             return existing
         return await self.create(
-            owner_type=owner_type.value,
+            owner_type=owner_type.code,
             owner_id=owner_id,
             setting_key=setting_key,
             setting_value=setting_value

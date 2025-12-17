@@ -45,7 +45,7 @@ def setup_routers():
     api_router.include_router(
         setting_router.router,
         prefix="/settings",
-        tags=["账户-用户配置"]
+        tags=["账户-配置管理"]
     )
 
     # 账号管理相关路由（需要认证）

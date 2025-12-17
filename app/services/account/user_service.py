@@ -34,9 +34,7 @@ class UserService:
         user_obj = await user_repository.create_user(
             username=user_data.username,
             password=hashed_password,
-            activation_code=user_data.activation_code,
-            phone=user_data.phone,
-            email=user_data.email
+            activation_code=user_data.activation_code
         )
 
         # 4. 激活激活码（事务内操作）

@@ -5,7 +5,10 @@ from pydantic import Field
 from app.schemas.common.base import BaseResponseModel
 
 
-class ChannelResponse(BaseResponseModel):
-    """渠道信息响应"""
-    code: int = Field(..., description="渠道编码")
-    desc: str = Field(..., description="渠道中文描述")
+class EnumResponse(BaseResponseModel):
+    """枚举响应（通用）
+
+    所有枚举类返回给前端的统一格式
+    """
+    code: int = Field(..., description="编码")
+    desc: str = Field(..., description="描述")

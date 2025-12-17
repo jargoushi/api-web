@@ -53,6 +53,7 @@ def create_app() -> FastAPI:
     """
     应用工厂函数
     """
+
     app = FastAPI(
         title=settings.app_name,
         description=settings.description,

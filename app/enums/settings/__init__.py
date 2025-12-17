@@ -1,4 +1,4 @@
-"""用户配置枚举包
+"""配置枚举包
 
 配置分组结构：
 - base.py: 基础类型定义 (SettingValueType, BaseSetting, BaseSettingEnum)

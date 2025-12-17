@@ -72,6 +72,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
             # 公共接口路径（枚举配置、字典数据等）
             f"{api_prefix}/common/channels",  # 渠道列表
+            f"{api_prefix}/common/projects",  # 项目列表
 
             # 激活码相关路径（根据业务需求）
             f"{api_prefix}/activation/init",
