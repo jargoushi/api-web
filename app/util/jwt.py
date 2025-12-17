@@ -17,7 +17,7 @@ class JWTManager:
 
     def __init__(self):
         self.secret_key = settings.JWT_SECRET_KEY
-        self.algorithm = "HS256"
+        self.algorithm = settings.JWT_ALGORITHM
         self.expire_minutes = settings.JWT_EXPIRE_MINUTES
 
     def create_access_token(self, user_id: int) -> Dict[str, Any]:
@@ -63,8 +63,3 @@ class JWTManager:
 
 # 全局实例
 jwt_manager = JWTManager()
-
-
-def get_jwt_manager() -> JWTManager:
-    """获取 JWT 管理器实例"""
-    return jwt_manager
