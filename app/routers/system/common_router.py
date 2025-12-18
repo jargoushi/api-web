@@ -57,6 +57,7 @@ async def get_settings_metadata():
         groups.append(SettingGroupMetadata(
             code=group.code,
             name=group.desc,
+            icon=group.icon,
             settings=settings
         ))
 

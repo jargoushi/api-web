@@ -30,6 +30,7 @@ class SettingGroupMetadata(BaseResponseModel):
     """配置分组元数据"""
     code: int = Field(..., description="分组编码")
     name: str = Field(..., description="分组名称")
+    icon: str = Field(..., description="分组图标")
     settings: List[SettingItemMetadata] = Field(..., description="配置项列表")
 
 

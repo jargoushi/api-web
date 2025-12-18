@@ -15,14 +15,15 @@ class SettingGroupEnum(Enum):
 
     每个分组直接关联其配置项枚举类
     """
-    GENERAL = (1, "通用设置", GeneralSettingEnum)
-    NOTIFICATION = (2, "通知设置", NotificationSettingEnum)
-    ADVANCED = (3, "高级设置", AdvancedSettingEnum)
-    DOWNLOAD = (4, "下载设置", DownloadSettingEnum)
+    GENERAL = (1, "通用设置", "settings", GeneralSettingEnum)
+    NOTIFICATION = (2, "通知设置", "bell", NotificationSettingEnum)
+    ADVANCED = (3, "高级设置", "tool", AdvancedSettingEnum)
+    DOWNLOAD = (4, "下载设置", "download", DownloadSettingEnum)
 
-    def __init__(self, code: int, desc: str, setting_enum: Type[Enum]):
+    def __init__(self, code: int, desc: str, icon: str, setting_enum: Type[Enum]):
         self.code = code
         self.desc = desc
+        self.icon = icon
         self.setting_enum = setting_enum
 
     def get_settings(self) -> list:
