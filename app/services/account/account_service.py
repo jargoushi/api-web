@@ -13,6 +13,7 @@ from app.schemas.account.account import (
     AccountResponse,
     AccountCreateRequest,
     AccountUpdateRequest,
+    AccountQueryRequest,
     BindingResponse,
     BindingRequest
 )
@@ -23,11 +24,19 @@ class AccountService:
 
     # ========== 账号管理 ==========
 
-    async def get_accounts(self, user_id: int) -> List[AccountResponse]:
-        """获取用户的所有账号"""
-        log.info(f"用户{user_id}获取账号列表")
-        accounts = await account_repository.find_by_user(user_id)
-        return [self._to_account_response(acc) for acc in accounts]
+    def get_account_queryset(self, params: AccountQueryRequest):
+        """获取账号查询集（用于分页）"""
+        query = Account.filter(is_deleted=False)
+
+        # 按用户筛选
+        if params.user_id:
+            query = query.filter(user_id=params.user_id)
+
+        # 按名称模糊搜索
+        if params.name:
+            query = query.filter(name__icontains=params.name)
+
+        return query.order_by("-created_at")
 
     async def create_account(self, user_id: int, request: AccountCreateRequest) -> AccountResponse:
         """创建账号"""

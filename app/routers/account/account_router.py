@@ -4,9 +4,11 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from app.schemas.common.response import ApiResponse, success_response
+from app.schemas.common.pagination import PageResponse
+from app.schemas.common.response import ApiResponse, success_response, paginated_response
 from app.schemas.account.account import (
     AccountResponse, AccountCreateRequest, AccountUpdateRequest, AccountDeleteRequest,
+    AccountQueryRequest,
     BindingResponse, BindingRequest, BindingUpdateRequest, BindingDeleteRequest
 )
 from app.schemas.account.setting import SettingUpdateRequest, AllSettingsResponse, SettingResponse
@@ -19,11 +21,16 @@ router = APIRouter()
 
 # ========== 账号管理 ==========
 
-@router.get("", response_model=ApiResponse[List[AccountResponse]], summary="账号列表")
-async def get_accounts(user_id: int = Depends(get_current_user_id)):
-    """获取当前用户的所有账号"""
-    accounts = await account_service.get_accounts(user_id)
-    return success_response(data=accounts)
+@router.post("/pageList", response_model=ApiResponse[PageResponse[AccountResponse]], summary="账号分页列表")
+async def get_accounts(params: AccountQueryRequest):
+    """
+    分页获取账号列表
+
+    - **user_id**: 用户ID（不传则查询所有）
+    - **name**: 账号名称（模糊搜索）
+    """
+    query = account_service.get_account_queryset(params)
+    return await paginated_response(query, params)
 
 
 @router.post("/create", response_model=ApiResponse[AccountResponse], summary="创建账号")
