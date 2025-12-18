@@ -123,12 +123,12 @@ CREATE TABLE `account_project_channels` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `account_id` BIGINT UNSIGNED NOT NULL COMMENT '账号ID',
     `project_code` INT UNSIGNED NOT NULL COMMENT '项目枚举code',
-    `channel_code` INT UNSIGNED NOT NULL COMMENT '渠道枚举code',
+    `channel_codes` VARCHAR(200) NOT NULL COMMENT '渠道枚举code列表，逗号分隔',
     `browser_id` VARCHAR(100) DEFAULT NULL COMMENT '比特浏览器ID',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_binding` (`account_id`, `project_code`, `channel_code`) USING BTREE COMMENT '账号+项目+渠道唯一',
+    UNIQUE KEY `uk_account_project` (`account_id`, `project_code`) USING BTREE COMMENT '账号+项目唯一',
     KEY `idx_account_id` (`account_id`) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC COMMENT = '账号项目渠道绑定表';
 
