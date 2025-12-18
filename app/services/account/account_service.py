@@ -26,7 +26,7 @@ class AccountService:
 
     def get_account_queryset(self, params: AccountQueryRequest):
         """获取账号查询集（用于分页）"""
-        query = Account.filter(is_deleted=False)
+        query = Account.all()
 
         # 按用户筛选
         if params.user_id:
@@ -50,10 +50,12 @@ class AccountService:
         )
         return self._to_account_response(account)
 
-    async def update_account(self, user_id: int, request: AccountUpdateRequest) -> AccountResponse:
+    async def update_account(self, request: AccountUpdateRequest) -> AccountResponse:
         """更新账号"""
-        log.info(f"用户{user_id}更新账号{request.id}")
-        account = await self._get_account_or_raise(request.id, user_id)
+        log.info(f"更新账号{request.id}")
+        account = await Account.get_or_none(id=request.id)
+        if not account:
+            raise BusinessException(message="账号不存在", code=404)
 
         if request.name is not None:
             account.name = request.name
@@ -67,11 +69,13 @@ class AccountService:
         await account.save()
         return self._to_account_response(account)
 
-    async def delete_account(self, user_id: int, account_id: int) -> None:
-        """删除账号（软删除）"""
-        log.info(f"用户{user_id}删除账号{account_id}")
-        account = await self._get_account_or_raise(account_id, user_id)
-        await account_repository.soft_delete(account)
+    async def delete_account(self, account_id: int) -> None:
+        """删除账号"""
+        log.info(f"删除账号{account_id}")
+        account = await Account.get_or_none(id=account_id)
+        if not account:
+            raise BusinessException(message="账号不存在", code=404)
+        await account.delete()
 
     # ========== 项目渠道绑定 ==========
 

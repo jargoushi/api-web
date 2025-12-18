@@ -41,16 +41,16 @@ async def create_account(request: AccountCreateRequest, user_id: int = Depends(g
 
 
 @router.post("/update", response_model=ApiResponse[AccountResponse], summary="更新账号")
-async def update_account(request: AccountUpdateRequest, user_id: int = Depends(get_current_user_id)):
+async def update_account(request: AccountUpdateRequest):
     """更新账号信息"""
-    account = await account_service.update_account(user_id, request)
+    account = await account_service.update_account(request)
     return success_response(data=account)
 
 
 @router.post("/delete", response_model=ApiResponse, summary="删除账号")
-async def delete_account(request: AccountDeleteRequest, user_id: int = Depends(get_current_user_id)):
-    """删除账号（软删除）"""
-    await account_service.delete_account(user_id, request.id)
+async def delete_account(request: AccountDeleteRequest):
+    """删除账号"""
+    await account_service.delete_account(request.id)
     return success_response()
 
 

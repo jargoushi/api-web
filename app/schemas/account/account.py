@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import Field
 
 from app.schemas.common.base import BaseRequestModel, BaseResponseModel
+from app.schemas.common.pagination import PageRequest
 
 
 # ========== 账号 ==========
@@ -42,10 +43,8 @@ class AccountResponse(BaseResponseModel):
     created_at: datetime
 
 
-class AccountQueryRequest(BaseRequestModel):
+class AccountQueryRequest(PageRequest):
     """账号分页查询请求"""
-    page: int = Field(1, ge=1, description="页码")
-    size: int = Field(10, ge=1, le=100, description="每页条数")
     user_id: Optional[int] = Field(None, description="用户ID（不传则查询所有）")
     name: Optional[str] = Field(None, description="账号名称（模糊搜索）")
 
