@@ -25,14 +25,13 @@ class Account(BaseModel):
 
 
 class AccountProjectChannel(BaseModel):
-    """账号项目渠道绑定模型"""
+    """账号项目渠道绑定模型（一个账号+一个项目对应多个渠道）"""
 
     account_id = fields.BigIntField(description="账号ID")
     project_code = fields.IntField(description="项目枚举code")
-    channel_code = fields.IntField(description="渠道枚举code")
+    channel_codes = fields.CharField(max_length=200, description="渠道枚举code列表，逗号分隔")
     browser_id = fields.CharField(max_length=100, null=True, description="比特浏览器ID")
 
     class Meta:
         table = "account_project_channels"
-        unique_together = [("account_id", "project_code", "channel_code")]
-
+        unique_together = [("account_id", "project_code")]

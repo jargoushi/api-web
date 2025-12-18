@@ -15,7 +15,8 @@ from app.schemas.account.account import (
     AccountUpdateRequest,
     AccountQueryRequest,
     BindingResponse,
-    BindingRequest
+    BindingRequest,
+    BindingUpdateRequest
 )
 
 
@@ -79,75 +80,80 @@ class AccountService:
 
     # ========== 项目渠道绑定 ==========
 
-    async def get_bindings(self, user_id: int, account_id: int) -> List[BindingResponse]:
+    async def get_bindings(self, account_id: int) -> List[BindingResponse]:
         """获取账号的所有绑定"""
         log.info(f"获取账号{account_id}的绑定列表")
-        await self._get_account_or_raise(account_id, user_id)
-
-        bindings = await account_project_channel_repository.find_by_account(account_id)
+        bindings = await AccountProjectChannel.filter(account_id=account_id)
         return [self._to_binding_response(b) for b in bindings]
 
-    async def bindding(self, user_id: int, account_id: int, request: BindingRequest) -> BindingResponse:
+    async def bindding(self, account_id: int, request: BindingRequest) -> BindingResponse:
         """绑定项目渠道"""
-        log.info(f"账号{account_id}绑定项目{request.project_code}渠道{request.channel_code}")
-        await self._get_account_or_raise(account_id, user_id)
+        log.info(f"账号{account_id}绑定项目{request.project_code}渠道{request.channel_codes}")
 
         # 验证项目和渠道
-        self._validate_project_channel(request.project_code, request.channel_code)
+        self._validate_project_channels(request.project_code, request.channel_codes)
 
-        binding = await account_project_channel_repository.upsert_binding(
-            account_id=account_id,
-            project_code=request.project_code,
-            channel_code=request.channel_code,
-            browser_id=request.browser_id
+        # 查找或创建绑定
+        channel_codes_str = ",".join(str(c) for c in request.channel_codes)
+        binding = await AccountProjectChannel.get_or_none(
+            account_id=account_id, project_code=request.project_code
         )
+
+        if binding:
+            binding.channel_codes = channel_codes_str
+            binding.browser_id = request.browser_id
+            await binding.save()
+        else:
+            binding = await AccountProjectChannel.create(
+                account_id=account_id,
+                project_code=request.project_code,
+                channel_codes=channel_codes_str,
+                browser_id=request.browser_id
+            )
+
         return self._to_binding_response(binding)
 
-    async def update_binding(
-        self, user_id: int, account_id: int, binding_id: int, browser_id: Optional[str]
-    ) -> BindingResponse:
-        """更新绑定（主要是浏览器ID）"""
-        log.info(f"更新绑定{binding_id}的浏览器ID")
-        await self._get_account_or_raise(account_id, user_id)
+    async def update_binding(self, request: BindingUpdateRequest) -> BindingResponse:
+        """更新绑定"""
+        log.info(f"更新绑定{request.id}")
+        binding = await AccountProjectChannel.get_or_none(id=request.id)
+        if not binding:
+            raise BusinessException(message="绑定不存在", code=404)
 
-        binding = await account_project_channel_repository.get_by_id(binding_id)
-        if not binding or binding.account_id != account_id:
-            raise BusinessException(message="绑定不存在")
+        if request.channel_codes is not None:
+            self._validate_project_channels(binding.project_code, request.channel_codes)
+            binding.channel_codes = ",".join(str(c) for c in request.channel_codes)
+        if request.browser_id is not None:
+            binding.browser_id = request.browser_id
 
-        binding.browser_id = browser_id
         await binding.save()
         return self._to_binding_response(binding)
 
-    async def unbind(self, user_id: int, account_id: int, binding_id: int) -> None:
+    async def unbind(self, binding_id: int) -> None:
         """解绑"""
         log.info(f"解除绑定{binding_id}")
-        await self._get_account_or_raise(account_id, user_id)
-
-        binding = await account_project_channel_repository.get_by_id(binding_id)
-        if not binding or binding.account_id != account_id:
-            raise BusinessException(message="绑定不存在")
-
+        binding = await AccountProjectChannel.get_or_none(id=binding_id)
+        if not binding:
+            raise BusinessException(message="绑定不存在", code=404)
         await binding.delete()
 
     # ========== 辅助方法 ==========
 
-    async def _get_account_or_raise(self, account_id: int, user_id: int) -> Account:
-        """获取账号，不存在则抛异常"""
-        account = await account_repository.find_by_id_and_user(account_id, user_id)
-        if not account:
-            raise BusinessException(message="账号不存在")
-        return account
-
-    def _validate_project_channel(self, project_code: int, channel_code: int) -> None:
-        """验证项目是否支持该渠道"""
+    def _validate_project_channels(self, project_code: int, channel_codes: List[int]) -> None:
+        """验证项目是否支持这些渠道"""
         try:
             project = ProjectEnum.from_code(project_code)
-            channel = ChannelEnum.from_code(channel_code)
         except ValueError as e:
             raise BusinessException(message=str(e))
 
-        if channel not in project.channels:
-            raise BusinessException(message=f"项目{project.desc}不支持渠道{channel.desc}")
+        for channel_code in channel_codes:
+            try:
+                channel = ChannelEnum.from_code(channel_code)
+            except ValueError as e:
+                raise BusinessException(message=str(e))
+
+            if channel not in project.channels:
+                raise BusinessException(message=f"项目{project.desc}不支持渠道{channel.desc}")
 
     def _to_account_response(self, account: Account) -> AccountResponse:
         """转换为响应对象"""
@@ -163,13 +169,15 @@ class AccountService:
     def _to_binding_response(self, binding: AccountProjectChannel) -> BindingResponse:
         """转换为绑定响应对象"""
         project = ProjectEnum.from_code(binding.project_code)
-        channel = ChannelEnum.from_code(binding.channel_code)
+        channel_codes = [int(c) for c in binding.channel_codes.split(",") if c]
+        channel_names = [ChannelEnum.from_code(c).desc for c in channel_codes]
+
         return BindingResponse(
             id=binding.id,
             project_code=binding.project_code,
             project_name=project.desc,
-            channel_code=binding.channel_code,
-            channel_name=channel.desc,
+            channel_codes=channel_codes,
+            channel_names=channel_names,
             browser_id=binding.browser_id
         )
 

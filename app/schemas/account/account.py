@@ -1,7 +1,7 @@
 """账号相关 Schema"""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import Field
 
@@ -54,13 +54,14 @@ class AccountQueryRequest(PageRequest):
 class BindingRequest(BaseRequestModel):
     """绑定请求"""
     project_code: int = Field(..., description="项目枚举code")
-    channel_code: int = Field(..., description="渠道枚举code")
+    channel_codes: List[int] = Field(..., description="渠道枚举code列表")
     browser_id: Optional[str] = Field(None, description="浏览器ID", max_length=100)
 
 
 class BindingUpdateRequest(BaseRequestModel):
     """更新绑定请求"""
     id: int = Field(..., description="绑定ID")
+    channel_codes: Optional[List[int]] = Field(None, description="渠道枚举code列表")
     browser_id: Optional[str] = Field(None, description="浏览器ID", max_length=100)
 
 
@@ -74,6 +75,6 @@ class BindingResponse(BaseResponseModel):
     id: int
     project_code: int
     project_name: str
-    channel_code: int
-    channel_name: str
+    channel_codes: List[int]
+    channel_names: List[str]
     browser_id: Optional[str] = None

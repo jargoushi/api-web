@@ -57,32 +57,30 @@ async def delete_account(request: AccountDeleteRequest):
 # ========== 项目渠道绑定 ==========
 
 @router.get("/{account_id}/binddings", response_model=ApiResponse[List[BindingResponse]], summary="绑定列表")
-async def get_bindings(account_id: int, user_id: int = Depends(get_current_user_id)):
+async def get_bindings(account_id: int):
     """获取账号的所有项目渠道绑定"""
-    bindings = await account_service.get_bindings(user_id, account_id)
+    bindings = await account_service.get_bindings(account_id)
     return success_response(data=bindings)
 
 
 @router.post("/{account_id}/binddings/bindding", response_model=ApiResponse[BindingResponse], summary="绑定")
-async def bindding(account_id: int, request: BindingRequest, user_id: int = Depends(get_current_user_id)):
+async def bindding(account_id: int, request: BindingRequest):
     """绑定项目渠道"""
-    binding = await account_service.bindding(user_id, account_id, request)
+    binding = await account_service.bindding(account_id, request)
     return success_response(data=binding)
 
 
-@router.post("/{account_id}/binddings/update", response_model=ApiResponse[BindingResponse], summary="更新绑定")
-async def update_binding(
-    account_id: int, request: BindingUpdateRequest, user_id: int = Depends(get_current_user_id)
-):
-    """更新绑定（如浏览器ID）"""
-    binding = await account_service.update_binding(user_id, account_id, request.id, request.browser_id)
+@router.post("/binddings/update", response_model=ApiResponse[BindingResponse], summary="更新绑定")
+async def update_binding(request: BindingUpdateRequest):
+    """更新绑定（渠道列表、浏览器ID）"""
+    binding = await account_service.update_binding(request)
     return success_response(data=binding)
 
 
-@router.post("/{account_id}/binddings/unbind", response_model=ApiResponse, summary="解绑")
-async def unbind(account_id: int, request: BindingDeleteRequest, user_id: int = Depends(get_current_user_id)):
+@router.post("/binddings/unbind", response_model=ApiResponse, summary="解绑")
+async def unbind(request: BindingDeleteRequest):
     """解除绑定"""
-    await account_service.unbind(user_id, account_id, request.id)
+    await account_service.unbind(request.id)
     return success_response()
 
 
