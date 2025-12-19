@@ -138,6 +138,8 @@ class UserService:
         """
         检查用户名、手机号或邮箱是否被其他用户使用（仅检查非空字段）
 
+        使用 OR 逻辑：只要任一字段被其他用户占用就返回 True
+
         Args:
             user_id (int): 当前用户的ID，用于排除自身
             username (str, optional): 待检查的用户名
@@ -147,28 +149,26 @@ class UserService:
         Returns:
             bool: True 表示已存在（不唯一），False 表示可用（唯一）
         """
+        from tortoise.expressions import Q
+
         if not username and not phone and not email:
             return False
 
-        # 构建查询条件
-        query = user_repository.get_queryset()
+        # 构建 OR 条件
+        conditions = Q()
+        if username:
+            conditions |= Q(username=username)
+        if phone:
+            conditions |= Q(phone=phone)
+        if email:
+            conditions |= Q(email=email)
 
+        # 构建查询，排除当前用户
+        query = user_repository.get_queryset()
         if user_id is not None:
             query = query.exclude(id=user_id)
 
-        # 如果提供了用户名，则加入查询条件
-        if username:
-            query = query.filter(username=username)
-
-        # 如果提供了手机号，则加入查询条件
-        if phone:
-            query = query.filter(phone=phone)
-
-        # 如果提供了邮箱，则加入查询条件
-        if email:
-            query = query.filter(email=email)
-
-        return await query.exists()
+        return await query.filter(conditions).exists()
 
 
 

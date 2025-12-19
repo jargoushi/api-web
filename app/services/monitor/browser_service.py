@@ -16,7 +16,7 @@ class BitBrowserService:
     """比特浏览器服务类"""
 
     def __init__(self):
-        self.base_url = settings.BIT_BROWSER_BASE_URL
+        self.base_url = settings.bit_browser_base_url
         self.headers = {
             "Content-Type": "application/json"
         }

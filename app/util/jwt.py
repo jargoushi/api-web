@@ -16,9 +16,9 @@ class JWTManager:
     """JWT 管理器 - 无状态 token"""
 
     def __init__(self):
-        self.secret_key = settings.JWT_SECRET_KEY
-        self.algorithm = settings.JWT_ALGORITHM
-        self.expire_minutes = settings.JWT_EXPIRE_MINUTES
+        self.secret_key = settings.jwt_secret_key
+        self.algorithm = settings.jwt_algorithm
+        self.expire_minutes = settings.jwt_expire_minutes
 
     def create_access_token(self, user_id: int) -> Dict[str, Any]:
         """创建访问令牌"""

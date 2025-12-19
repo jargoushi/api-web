@@ -12,14 +12,9 @@ from app.schemas.monitor.monitor import (
 from app.schemas.common.pagination import PageResponse
 from app.schemas.common.response import ApiResponse, success_response, paginated_response
 from app.services.monitor.monitor_service import monitor_service
+from app.util.auth_context import get_current_user_id
 
 router = APIRouter()
-
-
-# TODO: 替换为实际的用户认证依赖
-async def get_current_user_id() -> int:
-    """获取当前用户ID（临时实现）"""
-    return 1
 
 
 @router.post("/config", response_model=ApiResponse[MonitorConfigResponse], summary="创建监控配置")

@@ -29,26 +29,26 @@ class Settings(BaseSettings):
     log_level: str = "DEBUG"
 
     # 添加比特浏览器配置
-    BIT_BROWSER_BASE_URL: str = "http://127.0.0.1:54345"  # 默认本地地址
+    bit_browser_base_url: str = "http://127.0.0.1:54345"  # 默认本地地址
 
     # 激活码配置
-    ACTIVATION_GRACE_HOURS: int = 1  # 激活码默认宽裕时间（小时）
+    activation_grace_hours: int = 1  # 激活码默认宽裕时间（小时）
 
     # JWT配置
-    JWT_SECRET_KEY: str  # JWT密钥，生产环境必须设置
-    JWT_ALGORITHM: str = "HS256"  # JWT算法
-    JWT_EXPIRE_MINUTES: int = 1440  # Token有效期（分钟），默认24小时
+    jwt_secret_key: str  # JWT密钥，生产环境必须设置
+    jwt_algorithm: str = "HS256"  # JWT算法
+    jwt_expire_minutes: int = 1440  # Token有效期（分钟），默认24小时
 
     # API配置
-    API_PREFIX: str = "/api"  # API路由前缀
+    api_prefix: str = "/api"  # API路由前缀
 
     # 认证配置
-    ENABLE_AUTH: bool = True  # 是否启用认证中间件
-    TOKEN_REFRESH_THRESHOLD: int = 60  # Token刷新阈值（分钟），剩余时间少于阈值时建议刷新
+    enable_auth: bool = True  # 是否启用认证中间件
+    token_refresh_threshold: int = 60  # Token刷新阈值（分钟），剩余时间少于阈值时建议刷新
 
     # 视频生成配置
-    JIANYING_DRAFT_FOLDER: str = ""  # 剪映草稿文件夹路径，例如：C:/Users/用户名/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft
-    MATERIAL_BASE_PATH: str = "./materials"  # 素材文件基础路径
+    jianying_draft_folder: str = ""  # 剪映草稿文件夹路径，例如：C:/Users/用户名/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft
+    material_base_path: str = "./materials"  # 素材文件基础路径
 
 
 # 创建一个全局设置实例

@@ -177,7 +177,7 @@ class ActivationCodeService:
         if code.status == ActivationCodeStatusEnum.ACTIVATED.code:
             raise BusinessException(message="激活码已激活，无需重复激活")
 
-        await activation_repository.activate_activation_code(code, settings.ACTIVATION_GRACE_HOURS)
+        await activation_repository.activate_activation_code(code, settings.activation_grace_hours)
 
         log.info(f"激活码{activation_code}激活成功")
         return ActivationCodeResponse.model_validate(code, from_attributes=True)
